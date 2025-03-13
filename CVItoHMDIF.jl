@@ -9,6 +9,26 @@ using FilePathsBase
 using CSV
 using DataFrames
 
+function fn_build_hmdif()
+
+# Build the output HMDIF
+# header is standard
+    HMDIF_header = """HMSTART ukPMS 001 " " ; , \\
+                    TSTART;
+                    SURVEY\\TYPE,VERSION,NUMBER,NAME,SUBSECT,CWXSPUSED,OFFCWXSPUSED;
+                    SECTION\\NETWORK,NUMBER,LABEL,NORMDIR,SURVDIR,MASTER,LENGTH,COMMENT,SDATE,EDATE,STIME,ETIME,INSP;
+                    OBSERV\\NUMBER,DEFECT,VERSION,XSECT,SCHAIN,ECHAIN;
+                    OBVAL\\PARM,OPTION,VALUE,PERCENT;
+                    OBNOTE\\NOTE,COMMENT;
+                    TEND\\7;
+                    DSTART;"""
+    HMDIF_out = HMDIF_header
+# TODO calculate the number of data records (includes DSTART and DEND records)
+
+# TODO calculate the number of total HMD records (includes HMSTART and HMEND records)
+    return HMDIF_out
+end
+
 grid_file_name = pick_file()
 
 println(grid_file_name)
@@ -35,12 +55,15 @@ survey_name = split(first_line, r"^.+file ")[:2]
 # replace the spaces with an underscore and append HMD
 survey_output_file = string(replace(survey_name, " " => "_") * ".HMD")
 
-#grid_data = CSV.read(grid_file_name, 
-#row_one = first(grid_data)
-
 print(survey_output_file)
+
+#now go and get the full file skipping the first 22 rows as they are the explanation of the codes.
 
 grid_data = CSV.read(grid_file_name, DataFrame; header=22)
 
 grid_data
+
+HMD_output = fn_build_hmdif() 
+
+print(HMD_output)
 
