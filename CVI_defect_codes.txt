@@ -1,0 +1,10 @@
+BCKJ is 1,2
+BFEJ is 3,4,5
+BSDE is 6,7,8
+BSES is 9,10,11
+BTCK is 12,13
+BWTR is 14,15
+BLED is 16
+BRED is 17
+BUTS is 18
+BNAS is 19

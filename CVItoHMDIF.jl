@@ -10,10 +10,48 @@ using CSV
 using DataFrames
 using DataFramesMeta
 
+function fn_gdf_iterate(gdf_passed)
+
+    [section_process(i) for i in gdf_passed]
+
+end
+
+# Function to find rows containing a specific value
+"""
+    find_rows_with_value(df::DataFrame, value::Any)
+
+TBW
+"""
+function find_rows_with_value(df::DataFrame, value::Any)
+    #search_value = String(value)
+    filter(row -> any(x -> x == value, row), eachrow(df))
+    #@where(df, findall(x -> x == value))
+    return
+end
+
+function section_process(section_df)
+    println("from section_process")
+    section = section_df.SectionID[1]
+    section_nr =section_df.sectionNr[1]
+    start_chainage = first(section_df.Chainage)
+    last_chainage = last(section_df.Chainage)
+    length = last_chainage - start_chainage
+    println("section ", section, " section number ", section_nr," start ", start_chainage, " last ", last_chainage, " section length ", length)
+
+    #BNAS - code 19 Not assesed
+    #cvi_code = "19"
+    #bnas_rows = find_rows_with_value(section_df, 19)
+    #println("BNAS", bnas_rows)
+
+
+    #println(section_df)
+    
+end
+
+
 function fn_hmd_cvi_data_records(grid_data)
 
-    #using DataFrames
-    # drop rows with missing fields, this drop the dummy data at the end of the file.
+    # drop rows with missing fields, this drops the dummy OSGR data at the end of the file.
     dropmissing!(grid_data)
 
     # rename the 'Section ID' by removing the spaces as it's easier to deal with.
@@ -31,7 +69,13 @@ function fn_hmd_cvi_data_records(grid_data)
 
     # now for each grouped DF create records for section + observ + obval 
 
-    println(gdf_grid_data)
+    #println(gdf_grid_data) # just to check
+
+    gdf_data_records = fn_gdf_iterate(gdf_grid_data)
+
+    # don't forget to return the data record strings.
+    #print(gdf_data_records)
+
     return 
 end
 
@@ -117,7 +161,7 @@ survey_name = split(first_line, r"^.+file ")[:2]
 # replace the spaces with an underscore and append HMD
 survey_output_file = string(replace(survey_name, " " => "_") * ".HMD")
 
-print(survey_output_file)
+println("output file is ", survey_output_file)
 
 #now go and get the full file skipping the first 22 rows as they are the explanation of the codes.
 grid_file_name = "Test Grid 2.grd"
