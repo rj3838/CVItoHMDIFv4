@@ -22,9 +22,12 @@ end
 
 TBW
 """
-function find_rows_with_value(df::DataFrame, value::Any)
+function find_rows_with_value(section_df::SubDataFrame, cvi_code::String)
     #search_value = String(value)
-    filter(row -> any(x -> x == value, row), eachrow(df))
+    rows_with_value = findall(row -> any(x -> x == cvi_code, row), eachrow(section_df))
+
+    println(section_df[rows_with_value, :])
+    #filter(row -> any(x -> x == value, row), eachrow(df))
     #@where(df, findall(x -> x == value))
     return
 end
@@ -38,9 +41,83 @@ function section_process(section_df)
     length = last_chainage - start_chainage
     println("section ", section, " section number ", section_nr," start ", start_chainage, " last ", last_chainage, " section length ", length)
 
-    #BNAS - code 19 Not assesed
-    #cvi_code = "19"
-    #bnas_rows = find_rows_with_value(section_df, 19)
+    #BNAS - code 19 is Not assesed
+    cvi_code = "19"
+    bnas_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",bnas_rows)
+
+    cvi_code = "18"
+    buts_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",buts_rows)
+
+    cvi_code = "17"
+    bred_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",bred_rows)
+
+    cvi_code = "16"
+    bled_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ", bled_rows)
+
+    cvi_code = "15"
+    rhs_bwtr_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",rhs_bwtr_rows)
+    cvi_code = "14"
+    lhs_bwtr_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",lhs_bwtr_rows)
+
+    cvi_code = "13"
+    rhs_btck_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",rhs_btck_rows)
+
+    cvi_code = "12"
+    lhs_btck_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",lhs_btck_rows)
+
+    cvi_code = "11"
+    both_bses_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",both_bses_rows)
+
+    cvi_code = "10"
+    rhs_bses_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",rhs_bses_rows)
+
+    cvi_code = "9"
+    lhs_bses_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",lhs_bses_rows)
+
+    cvi_code = "8"
+    both_bsde_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",both_bsde_rows)
+
+    cvi_code = "7"
+    rhs_bsde_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",rhs_bsde_rows)
+
+    cvi_code = "6"
+    lhs_bsde_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",lhs_bsde_rows)
+
+    cvi_code = "5"
+    both_bsej_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",both_bsej_rows)
+
+    cvi_code = "4"
+    rhs_bsej_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",rhs_bsej_rows)
+
+    cvi_code = "3"
+    lhs_bsej_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",lhs_bsej_rows)
+
+    cvi_code = "2"
+    rhs_bckj_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",rhs_bckj_rows)
+
+    cvi_code = "1"
+    lhs_bckj_rows = find_rows_with_value(section_df, cvi_code)
+    println(cvi_code, " ",lhs_bckj_rows)
+
+    #print(section_df[rows_with_value, :])
     #println("BNAS", bnas_rows)
 
 
