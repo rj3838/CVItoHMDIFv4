@@ -23,8 +23,10 @@ end
 TBW
 """
 function find_rows_with_value(section_df::SubDataFrame, cvi_code::String)
-    #search_value = String(value)
-    rows_with_value = findall(row -> any(x -> x == cvi_code, row), eachrow(section_df))
+    # remove the sectionID, Chainage and sectionNr columns as the string used for the cvi code can occur in 
+    # those columns.
+     
+    rows_with_value = findall(row -> any(x -> x == cvi_code, row), eachrow(select(section_df, Not([:SectionID, :Chainage, :sectionNr]))))
 
     println(section_df[rows_with_value, :])
     #filter(row -> any(x -> x == value, row), eachrow(df))
@@ -40,87 +42,102 @@ function section_process(section_df)
     last_chainage = last(section_df.Chainage)
     length = last_chainage - start_chainage
     println("section ", section, " section number ", section_nr," start ", start_chainage, " last ", last_chainage, " section length ", length)
-
+    hmd_return_records  = []
+    # section template for HMDIF is
+    # SECTION\\NETWORK,NUMBER,LABEL,NORMDIR,SURVDIR,MASTER,LENGTH,COMMENT,SDATE,EDATE,STIME,ETIME,INSP;
+    # building SECTION record
+    hmd_section_record = string("SECTION\\", section, ",", section_nr, ",F,F,,", string(length),",,,,,") 
+    println("sectoin ",hmd_section_record)
+    push!(hmd_return_records,string(hmd_section_record))
+    
     #BNAS - code 19 is Not assesed
-    cvi_code = "19"
-    bnas_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",bnas_rows)
+    # cvi_code = "19"
+    observ_bnas_record = string("OBSERV\\",section_nr,",BNAS,,AAAA,0,20")
+    obval_bnas_record = string("OBVAL\\",section_nr,",1,10,v,,")
+    push!(hmd_return_records,string(observ_bnas_record))
+    push!(hmd_return_records,string(obval_bnas_record))
 
-    cvi_code = "18"
-    buts_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",buts_rows)
+    # bnas_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",bnas_rows)
 
-    cvi_code = "17"
-    bred_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",bred_rows)
+    # cvi_code = "18"
+    # buts_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",buts_rows)
 
-    cvi_code = "16"
-    bled_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ", bled_rows)
+    # cvi_code = "17"
+    # bred_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",bred_rows)
 
-    cvi_code = "15"
-    rhs_bwtr_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",rhs_bwtr_rows)
-    cvi_code = "14"
-    lhs_bwtr_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",lhs_bwtr_rows)
+    # cvi_code = "16"
+    # bled_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ", bled_rows)
 
-    cvi_code = "13"
-    rhs_btck_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",rhs_btck_rows)
+    # cvi_code = "15"
+    # rhs_bwtr_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",rhs_bwtr_rows)
 
-    cvi_code = "12"
-    lhs_btck_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",lhs_btck_rows)
+    # cvi_code = "14"
+    # lhs_bwtr_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",lhs_bwtr_rows)
 
-    cvi_code = "11"
-    both_bses_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",both_bses_rows)
+    # cvi_code = "13"
+    # rhs_btck_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",rhs_btck_rows)
 
-    cvi_code = "10"
-    rhs_bses_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",rhs_bses_rows)
+    # cvi_code = "12"
+    # lhs_btck_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",lhs_btck_rows)
 
-    cvi_code = "9"
-    lhs_bses_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",lhs_bses_rows)
+    # cvi_code = "11"
+    # both_bses_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",both_bses_rows)
 
-    cvi_code = "8"
-    both_bsde_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",both_bsde_rows)
+    # cvi_code = "10"
+    # rhs_bses_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",rhs_bses_rows)
 
-    cvi_code = "7"
-    rhs_bsde_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",rhs_bsde_rows)
+    # cvi_code = "9"
+    # lhs_bses_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",lhs_bses_rows)
 
-    cvi_code = "6"
-    lhs_bsde_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",lhs_bsde_rows)
+    # cvi_code = "8"
+    # both_bsde_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",both_bsde_rows)
 
-    cvi_code = "5"
-    both_bsej_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",both_bsej_rows)
+    # cvi_code = "7"
+    # rhs_bsde_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",rhs_bsde_rows)
 
-    cvi_code = "4"
-    rhs_bsej_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",rhs_bsej_rows)
+    # cvi_code = "6"
+    # lhs_bsde_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",lhs_bsde_rows)
 
-    cvi_code = "3"
-    lhs_bsej_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",lhs_bsej_rows)
+    # cvi_code = "5"
+    # both_bsej_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",both_bsej_rows)
 
-    cvi_code = "2"
-    rhs_bckj_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",rhs_bckj_rows)
+    # cvi_code = "4"
+    # rhs_bsej_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",rhs_bsej_rows)
 
-    cvi_code = "1"
-    lhs_bckj_rows = find_rows_with_value(section_df, cvi_code)
-    println(cvi_code, " ",lhs_bckj_rows)
+    # cvi_code = "3"
+    # lhs_bsej_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",lhs_bsej_rows)
+
+    # cvi_code = "2"
+    # rhs_bckj_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",rhs_bckj_rows)
+
+    # cvi_code = "1"
+    # lhs_bckj_rows = find_rows_with_value(section_df, cvi_code)
+    # println(cvi_code, " ",lhs_bckj_rows)
 
     #print(section_df[rows_with_value, :])
     #println("BNAS", bnas_rows)
-
-
+    hmd_return_strings = [String(item) for item in hmd_return_records]
+    println("boo",hmd_return_strings)
+    hmd_return = [(String(item)) for item in hmd_return_strings]
+    return hmd_return
     #println(section_df)
     
 end
@@ -150,17 +167,20 @@ function fn_hmd_cvi_data_records(grid_data)
 
     gdf_data_records = fn_gdf_iterate(gdf_grid_data)
 
-    # don't forget to return the data record strings.
-    #print(gdf_data_records)
+    # tidy up the data records so they are just a string.
+    #[push!(gdf_data_records, string(i)) for i in gdf_data_records]
 
-    return 
+    # don't forget to return the data record strings.
+    print(gdf_data_records)
+
+    return gdf_data_records
 end
 
 function fn_build_hmdif(grid_data, survey_name)
 
 # Build the output HMDIF
 # header is standard
-    HMDIF_out = [] # empty list/array
+    HMDIF_out = String[] # empty list/array
     line1 = "HMSTART ukPMS 001  ; , \\"
     line2 = "TSTART;"
     line3 = "SURVEY\\TYPE,VERSION,NUMBER,NAME,SUBSECT,CWXSPUSED,OFFCWXSPUSED;"
@@ -190,7 +210,11 @@ function fn_build_hmdif(grid_data, survey_name)
 
 # building the data in a seperate function
 
-data_out = fn_hmd_cvi_data_records(grid_data)
+    data_out = fn_hmd_cvi_data_records(grid_data)
+    println("out",data_out)
+    #split!.(data_out)
+    [string(i) for i in data_out]
+    [push!(HMDIF_out, string(i)) for i in data_out]
 
 # TODO calculate the number of data records in the list(includes DSTART and DEND records)
 # DSTART is always at 9
@@ -250,4 +274,21 @@ grid_data = CSV.read(grid_file_name, DataFrame; header=22,
 
 HMD_output = fn_build_hmdif(grid_data, survey_name) 
 
-print(HMD_output)
+print(typeof(HMD_output))
+
+function remove_quoted_strings(HMD_output)
+    #pattern = r"\[(.+)?\]"
+    #return [string(match(pattern, item)) for item in HMD_output]
+    return [string(item) for item in HMD_output]
+end
+
+# # Apply the function to the array
+cleaned_HMD_output = remove_quoted_strings(HMD_output)
+
+println(cleaned_HMD_output)
+
+open(survey_output_file, "w") do file
+    for line in cleaned_HMD_output
+        write(file, line * "\n")
+    end
+end
