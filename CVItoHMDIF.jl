@@ -28,10 +28,13 @@ function find_rows_with_value(section_df::SubDataFrame, cvi_code::String)
      
     rows_with_value = findall(row -> any(x -> x == cvi_code, row), eachrow(select(section_df, Not([:SectionID, :Chainage, :sectionNr]))))
 
-    println(section_df[rows_with_value, :])
+    println(typeof((section_df[rows_with_value, :]))) #0
+    #println("typeof ",typeof(rows_with_value))
+    row_number = size(section_df[rows_with_value, :],1)
+    println(row_number)
     #filter(row -> any(x -> x == value, row), eachrow(df))
     #@where(df, findall(x -> x == value))
-    return
+    return row_number
 end
 
 function section_process(section_df)
@@ -42,18 +45,41 @@ function section_process(section_df)
     last_chainage = last(section_df.Chainage)
     length = last_chainage - start_chainage
     println("section ", section, " section number ", section_nr," start ", start_chainage, " last ", last_chainage, " section length ", length)
-    hmd_return_records  = []
+    hmd_return_records  = String[]
     # section template for HMDIF is
     # SECTION\\NETWORK,NUMBER,LABEL,NORMDIR,SURVDIR,MASTER,LENGTH,COMMENT,SDATE,EDATE,STIME,ETIME,INSP;
     # building SECTION record
-    hmd_section_record = string("SECTION\\", section, ",", section_nr, ",F,F,,", string(length),",,,,,") 
-    println("sectoin ",hmd_section_record)
+    hmd_section_record = string("SECTION\\", section, ",", section_nr, ",F,F,,", string(length),",,,,,;\n") 
+    #println("sectoin ",hmd_section_record)
     push!(hmd_return_records,string(hmd_section_record))
+
+    #observ and obval templates are :
+    #OBSERV\\NUMBER,DEFECT,VERSION,XSECT,SCHAIN,ECHAIN;"
+    #OBVAL\\PARM,OPTION,VALUE,PERCENT;
     
     #BNAS - code 19 is Not assesed
-    # cvi_code = "19"
-    observ_bnas_record = string("OBSERV\\",section_nr,",BNAS,,AAAA,0,20")
-    obval_bnas_record = string("OBVAL\\",section_nr,",1,10,v,,")
+    cvi_code = "19"
+    # how many rows contain a 19
+    #println("typeof", typeof(find_rows_with_value(section_df, cvi_code)))
+    returned_rows = find_rows_with_value(section_df, cvi_code)
+    #println("typeof ", typeof(returned_rows))
+    # if isnothing(returned_rows)
+    #     bnas_rows = 0
+    # else
+    #     bnas_rows = nrow(returned_rows)
+    # end
+
+    # try
+    #     bnas_rows = nrow(returned_rows)
+    #     println("rows found ", returned_rows)
+    # catch exc
+    #     bnas_rows = 0
+    # end
+    #println("returned_rows", bnas_rows)
+    #bnas_rows = 0
+    #find_rows_with_value(select!(section_df, Not([:SectionID, :Chainage, :sectionNr])), cvi_code)
+    observ_bnas_record = string("OBSERV\\",section_nr,",BNAS,,AAAA,0,20;\n")
+    obval_bnas_record = string("OBVAL\\",section_nr,",1,",returned_rows,",v,,;")
     push!(hmd_return_records,string(observ_bnas_record))
     push!(hmd_return_records,string(obval_bnas_record))
 
@@ -135,7 +161,7 @@ function section_process(section_df)
     #print(section_df[rows_with_value, :])
     #println("BNAS", bnas_rows)
     hmd_return_strings = [String(item) for item in hmd_return_records]
-    println("boo",hmd_return_strings)
+    #println("boo",hmd_return_strings)
     hmd_return = [(String(item)) for item in hmd_return_strings]
     return hmd_return
     #println(section_df)
@@ -171,7 +197,7 @@ function fn_hmd_cvi_data_records(grid_data)
     #[push!(gdf_data_records, string(i)) for i in gdf_data_records]
 
     # don't forget to return the data record strings.
-    print(gdf_data_records)
+    #print(gdf_data_records)
 
     return gdf_data_records
 end
@@ -211,16 +237,17 @@ function fn_build_hmdif(grid_data, survey_name)
 # building the data in a seperate function
 
     data_out = fn_hmd_cvi_data_records(grid_data)
-    println("out",data_out)
+    #println("out",data_out)
     #split!.(data_out)
-    [string(i) for i in data_out]
-    [push!(HMDIF_out, string(i)) for i in data_out]
+    #[string(i) for i in data_out]
+    #[push!(HMDIF_out, string(i)) for i in data_out]
+    data_out = [join(inner_vector, " ") for inner_vector in data_out]
+    append!(HMDIF_out, data_out)
 
-# TODO calculate the number of data records in the list(includes DSTART and DEND records)
-# DSTART is always at 9
-
+#
+    #println(size(HMDIF_out))
     HMDIF_count = size(HMDIF_out)[1]
-    dend_count = Int(HMDIF_count) - 6
+    dend_count = Int(HMDIF_count) + 9
     #println(dend_count)
     #DEND_string = raw"DEND\\" + string(dend_value) + raw";"
     DEND_string = "DEND\\$dend_count;"
@@ -228,8 +255,10 @@ function fn_build_hmdif(grid_data, survey_name)
     #println(HMDIF_out)
     # print("""DEND\\""", dend_value)
 
-# HMEND is the length of HMDIF_out plus one.
-    HMDIF_count = Int(size(HMDIF_out)[1]) + 1
+# HMEND is the length of HMDIF_out plus 9 (headers + HMSTART record + HMEND record)
+    #print("HMDIF size",size(HMDIF_out))
+    #HMDIF_count = size(HMDIF_out)[1] + 9
+    HMDIF_count= dend_count + 9
     HMEND_string = "HMEND\\$HMDIF_count;"
     push!(HMDIF_out, HMEND_string)
     return HMDIF_out
