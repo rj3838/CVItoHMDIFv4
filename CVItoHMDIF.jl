@@ -10,6 +10,8 @@ using CSV
 using DataFrames
 using DataFramesMeta
 
+include("cluster_identification.jl")
+
 function fn_gdf_iterate(gdf_passed)
 
     [section_process(i) for i in gdf_passed]
@@ -61,7 +63,10 @@ function section_process(section_df)
     cvi_code = "19"
     # how many rows contain a 19
     #println("typeof", typeof(find_rows_with_value(section_df, cvi_code)))
+    returned_clusters = cluster_identification(section_df, cvi_code)
     returned_rows = find_rows_with_value(section_df, cvi_code)
+
+    println("returned_clusters ", returned_clusters)
     #println("typeof ", typeof(returned_rows))
     # if isnothing(returned_rows)
     #     bnas_rows = 0
