@@ -11,7 +11,7 @@ using CSV
 using DataFrames
 using DataFramesMeta
 
-include("ClusterIdentification.jl")
+include("ClusterIdentification2.jl")
 #import .ClusterIdentification
 
 #import find_value_clusters
@@ -43,7 +43,7 @@ function find_rows_with_value(section_df::DataFrame, cvi_code::String)
     return row_number
 end
 
-function section_process(section_df:: DataFrame)
+function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, Vector{Int64}})
     println("from section_process")
     section = section_df.SectionID[1]
     section_nr =section_df.sectionNr[1]
@@ -195,11 +195,11 @@ function fn_hmd_cvi_data_records(grid_data)
     @rtransform!(grid_data, :sectionNr = string(round(Int, :sectionNr)))
 
     # Section Id and sectionNr can now be used to create a grouped data frame.
+    #gdf_grid_data = groupby(grid_data, [:SectionID, :sectionNr])
     gdf_grid_data = groupby(grid_data, [:SectionID, :sectionNr])
-
     # now for each grouped DF create records for section + observ + obval 
 
-    #println(gdf_grid_data) # just to check
+    println(gdf_grid_data) # just to check
 
     gdf_data_records = fn_gdf_iterate(gdf_grid_data)
 
@@ -282,7 +282,7 @@ end
 
 # Open the file in read mode
 #file = open(grid_file_name, "r")
-file = open("Test Grid 2.grd", "r")
+file = open("Test Grid 3.grd", "r")
 
 # Read the first line and close it
 first_line = readline(file)
@@ -304,7 +304,7 @@ survey_output_file = string(replace(survey_name, " " => "_") * ".HMD")
 println("output file is ", survey_output_file)
 
 #now go and get the full file skipping the first 22 rows as they are the explanation of the codes.
-grid_file_name = "Test Grid 2.grd"
+grid_file_name = "Test Grid 3.grd"
 
 grid_data = CSV.read(grid_file_name, DataFrame; header=22,
                                                 silencewarnings=true)
