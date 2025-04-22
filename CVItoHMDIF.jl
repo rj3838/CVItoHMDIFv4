@@ -2,7 +2,8 @@
 #
 # The purpose is to read a Chartcrack grid from a CVI survey and produce a HMD for eventusl upload to a PMS
 
-# Select file to open
+# to be added 
+#Select file to open
 
 using NativeFileDialog
 using FilePathsBase
@@ -10,7 +11,11 @@ using CSV
 using DataFrames
 using DataFramesMeta
 
-include("cluster_identification.jl")
+include("ClusterIdentification.jl")
+#import .ClusterIdentification
+
+#import find_value_clusters
+#import fn_cluster_ident
 
 function fn_gdf_iterate(gdf_passed)
 
@@ -19,12 +24,11 @@ function fn_gdf_iterate(gdf_passed)
 end
 
 # Function to find rows containing a specific value
-"""
-    find_rows_with_value(df::DataFrame, value::Any)
 
-TBW
-"""
-function find_rows_with_value(section_df::SubDataFrame, cvi_code::String)
+   # find_rows_with_value(df::DataFrame, value::Any)
+
+
+function find_rows_with_value(section_df::DataFrame, cvi_code::String)
     # remove the sectionID, Chainage and sectionNr columns as the string used for the cvi code can occur in 
     # those columns.
      
@@ -39,7 +43,7 @@ function find_rows_with_value(section_df::SubDataFrame, cvi_code::String)
     return row_number
 end
 
-function section_process(section_df)
+function section_process(section_df:: DataFrame)
     println("from section_process")
     section = section_df.SectionID[1]
     section_nr =section_df.sectionNr[1]
@@ -63,8 +67,9 @@ function section_process(section_df)
     cvi_code = "19"
     # how many rows contain a 19
     #println("typeof", typeof(find_rows_with_value(section_df, cvi_code)))
-    returned_clusters = cluster_identification(section_df, cvi_code)
-    returned_rows = find_rows_with_value(section_df, cvi_code)
+    conv_section_df = DataFrame(section_df)
+    returned_clusters = find_value_clusters(conv_section_df, cvi_code)
+    returned_rows = find_rows_with_value(conv_section_df, cvi_code)
 
     println("returned_clusters ", returned_clusters)
     #println("typeof ", typeof(returned_rows))
