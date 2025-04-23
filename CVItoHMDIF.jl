@@ -12,6 +12,7 @@ using DataFrames
 using DataFramesMeta
 
 include("ClusterIdentification2.jl")
+include("cvi_calculations.jl")
 #import .ClusterIdentification
 
 #import find_value_clusters
@@ -69,8 +70,10 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
 
         cvi_code = string(row[1])
         defect_code = row[2]
+        survey_direction = row[3]
+        calculation = row[4]
 
-        println(cvi_code, " ", defect_code)
+        println(cvi_code, " ", defect_code, " ", survey_direction, " ", calculation)
     
     #observ and obval templates are :
     #OBSERV\\NUMBER,DEFECT,VERSION,XSECT,SCHAIN,ECHAIN;"
@@ -83,8 +86,30 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
         conv_section_df = DataFrame(section_df)
         returned_clusters = find_value_clusters(conv_section_df, cvi_code)
         returned_rows = find_rows_with_value(conv_section_df, cvi_code)
-
+        
+        defect_value = ""
+        
         println("returned_clusters ", returned_clusters)
+
+        if calculation == "Length" && !isempty(returned_clusters)
+            defect_value = fn_length_calc(conv_section_df, returned_clusters, returned_rows)
+            println(calculation, " ", defect_value)
+        end
+
+        if calculation == "Lateral"
+            #fn_lateral_calc
+            println(calculation)
+        end
+
+        if calculation == "Count"
+            #fn_count_calc
+            println(calculation)
+        end
+
+        if calculation ∉ ["Length", "Lateral", "Count"]
+            println( calculation, "calculation not accepted")
+        end
+
     #println("typeof ", typeof(returned_rows))
     # if isnothing(returned_rows)
     #     bnas_rows = 0
@@ -102,12 +127,12 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
     #bnas_rows = 0
     #find_rows_with_value(select!(section_df, Not([:SectionID, :Chainage, :sectionNr])), cvi_code)
         observ_defect_record = string("OBSERV\\",section_nr,",",defect_code,",Version,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
-        obval_defect_record = string("OBVAL\\",section_nr,",1,",returned_rows,",v,,;\n")
+        obval_defect_record = string("OBVAL\\",section_nr,",1,",defect_value,",P,,;\n")
         push!(hmd_return_records,string(observ_defect_record))
         push!(hmd_return_records,string(obval_defect_record))
     end
     hmd_return_strings = [String(item) for item in hmd_return_records]
-    println("boo",hmd_return_strings)
+    #println("boo",hmd_return_strings)
        
     hmd_return = [(String(item)) for item in hmd_return_strings]   
     return hmd_return
@@ -262,34 +287,12 @@ grid_file_name = "Test Grid 3.grd"
 grid_data = CSV.read(grid_file_name, DataFrame; header=22,
                                                 silencewarnings=true)
 
-#grid_data
 
 HMD_output = fn_build_hmdif(grid_data, survey_name) 
 
-print(typeof(HMD_output))
+#print(typeof(HMD_output))
 
-function remove_quoted_strings(HMD_output)
-    #pattern = r"\[(.+)?\]"
-    #return [string(match(pattern, item)) for item in HMD_output]
-    return [string(item) for item in HMD_output]
-end
-
-# # Apply the functions to the array
-#
-#
-#remove the empty lines
-#HMD_output = filter(!isempty, HMD_output)
-#HMD_output = remove_quoted_strings(HMD_output)
-#cleaned_HMD_output = DataFrame(HMD_output)
-#dropmissing!(cleaned_HMD_output, a)
-
-
-# remove the space at the start of each string in a vector of strings
-#cleaned_HMD_output = map(lstrip, cleaned_HMD_output)
-#cleaned_HMD_output = map(str -> replace(str, r"^\s+" => ""), cleaned_HMD_output)
-#filter!(str -> length(str) > 3, cleaned_HMD_output)
-#replace!(cleaned_HMD_output,"\n\n" => "/n")
-println(HMD_output)
+#println(HMD_output)
 
 open(survey_output_file, "w") do file
     for line in HMD_output
