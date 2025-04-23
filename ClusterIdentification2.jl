@@ -132,44 +132,44 @@ function fn_cluster_ident(input_df::DataFrame, target_value::Int8)
     #         println(coord)
     #     end
     # end
-    function q(old_a, current_a, df_row)
-        if current_a != old_a
-            println("Value of 'a' changed from $old_a to $current_a at row:")
-            println(df_row)
-            # Add your processing logic for function q here
-        end
-        return current_a
-    end
+    # function q(old_a, current_a, df_row)
+    #     if current_a != old_a
+    #         println("Value of 'a' changed from $old_a to $current_a at row:")
+    #         println(df_row)
+    #         # Add your processing logic for function q here
+    #     end
+    #     return current_a
+    # end
     
-    function k(group::SubDataFrame)
-        println("Processing group of $(size(group, 1)) rows for column 'b' starting with:")
-        println(group[1,:])
-        # Add your processing logic for function k here
-        return nothing
-    end
+    # function k(group::SubDataFrame)
+    #     println("Processing group of $(size(group, 1)) rows for column 'b' starting with:")
+    #     println(group[1,:])
+    #     # Add your processing logic for function k here
+    #     return nothing
+    # end
     
-    println("Processing function q for changes in column 'a':")
-    old_a_value = nothing
-    for i in 1:nrow(input_df)
-        old_a_value = q(old_a_value, input_df.a[i],imput_df[i,:])
-    end
+    # println("Processing function q for changes in column 'a':")
+    # old_a_value = nothing
+    # for i in 1:nrow(input_df)
+    #     old_a_value = q(old_a_value, input_df.a[i],imput_df[i,:])
+    # end
     
-    println("\nProcessing function k for groups of 20 in column 'b':")
-    for i in 1:20:nrow(input_df)
-        end_index = min(i + 19, nrow(input_df))
-        group_b = @view input_df[i:end_index, :]
-        k(group_b)
-    end
+    # println("\nProcessing function k for groups of 20 in column 'b':")
+    # for i in 1:20:nrow(input_df)
+    #     end_index = min(i + 19, nrow(input_df))
+    #     group_b = @view input_df[i:end_index, :]
+    #     k(group_b)
+    # end
 
-    # Find and print clusters with queen connectivity.
-    clusters_queen = find_value_clusters(input_df, target_value, connectivity=:queen)
-    println("\nClusters of $target_value (queen connectivity):")
-    for cluster in clusters_queen
-        println("Cluster:")
-        for coord in cluster
-            println(coord)
-        end
-    end
+    # # Find and print clusters with queen connectivity.
+    # clusters_queen = find_value_clusters(input_df, target_value, connectivity=:queen)
+    # println("\nClusters of $target_value (queen connectivity):")
+    # for cluster in clusters_queen
+    #     println("Cluster:")
+    #     for coord in cluster
+    #         println(coord)
+    #     end
+    # end
 end #function end
 
 #end #module end

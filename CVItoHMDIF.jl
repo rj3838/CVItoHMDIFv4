@@ -19,6 +19,7 @@ include("ClusterIdentification2.jl")
 
 function fn_gdf_iterate(gdf_passed)
 
+    println("calling section process")
     [section_process(i) for i in gdf_passed]
 
 end
@@ -59,19 +60,31 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
     #println("sectoin ",hmd_section_record)
     push!(hmd_return_records,string(hmd_section_record))
 
+    # read the defect code list
+
+    defect_code_list = CSV.read("CVI_Defect_code_info.csv", DataFrame)
+    defect_list_length = size(defect_code_list,1)
+
+    for row in eachrow(defect_code_list)
+
+        cvi_code = string(row[1])
+        defect_code = row[2]
+
+        println(cvi_code, " ", defect_code)
+    
     #observ and obval templates are :
     #OBSERV\\NUMBER,DEFECT,VERSION,XSECT,SCHAIN,ECHAIN;"
     #OBVAL\\PARM,OPTION,VALUE,PERCENT;
     
     #BNAS - code 19 is Not assesed
-    cvi_code = "19"
+    #cvi_code = "19"
     # how many rows contain a 19
     #println("typeof", typeof(find_rows_with_value(section_df, cvi_code)))
-    conv_section_df = DataFrame(section_df)
-    returned_clusters = find_value_clusters(conv_section_df, cvi_code)
-    returned_rows = find_rows_with_value(conv_section_df, cvi_code)
+        conv_section_df = DataFrame(section_df)
+        returned_clusters = find_value_clusters(conv_section_df, cvi_code)
+        returned_rows = find_rows_with_value(conv_section_df, cvi_code)
 
-    println("returned_clusters ", returned_clusters)
+        println("returned_clusters ", returned_clusters)
     #println("typeof ", typeof(returned_rows))
     # if isnothing(returned_rows)
     #     bnas_rows = 0
@@ -88,92 +101,17 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
     #println("returned_rows", bnas_rows)
     #bnas_rows = 0
     #find_rows_with_value(select!(section_df, Not([:SectionID, :Chainage, :sectionNr])), cvi_code)
-    observ_bnas_record = string("OBSERV\\",section_nr,",BNAS,,AAAA,0,20;\n")
-    obval_bnas_record = string("OBVAL\\",section_nr,",1,",returned_rows,",v,,;")
-    push!(hmd_return_records,string(observ_bnas_record))
-    push!(hmd_return_records,string(obval_bnas_record))
-
-    # bnas_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",bnas_rows)
-
-    # cvi_code = "18"
-    # buts_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",buts_rows)
-
-    # cvi_code = "17"
-    # bred_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",bred_rows)
-
-    # cvi_code = "16"
-    # bled_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ", bled_rows)
-
-    # cvi_code = "15"
-    # rhs_bwtr_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",rhs_bwtr_rows)
-
-    # cvi_code = "14"
-    # lhs_bwtr_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",lhs_bwtr_rows)
-
-    # cvi_code = "13"
-    # rhs_btck_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",rhs_btck_rows)
-
-    # cvi_code = "12"
-    # lhs_btck_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",lhs_btck_rows)
-
-    # cvi_code = "11"
-    # both_bses_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",both_bses_rows)
-
-    # cvi_code = "10"
-    # rhs_bses_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",rhs_bses_rows)
-
-    # cvi_code = "9"
-    # lhs_bses_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",lhs_bses_rows)
-
-    # cvi_code = "8"
-    # both_bsde_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",both_bsde_rows)
-
-    # cvi_code = "7"
-    # rhs_bsde_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",rhs_bsde_rows)
-
-    # cvi_code = "6"
-    # lhs_bsde_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",lhs_bsde_rows)
-
-    # cvi_code = "5"
-    # both_bsej_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",both_bsej_rows)
-
-    # cvi_code = "4"
-    # rhs_bsej_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",rhs_bsej_rows)
-
-    # cvi_code = "3"
-    # lhs_bsej_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",lhs_bsej_rows)
-
-    # cvi_code = "2"
-    # rhs_bckj_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",rhs_bckj_rows)
-
-    # cvi_code = "1"
-    # lhs_bckj_rows = find_rows_with_value(section_df, cvi_code)
-    # println(cvi_code, " ",lhs_bckj_rows)
-
-    #print(section_df[rows_with_value, :])
-    #println("BNAS", bnas_rows)
+        observ_defect_record = string("OBSERV\\",section_nr,",",defect_code,",Version,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
+        obval_defect_record = string("OBVAL\\",section_nr,",1,",returned_rows,",v,,;\n")
+        push!(hmd_return_records,string(observ_defect_record))
+        push!(hmd_return_records,string(obval_defect_record))
+    end
     hmd_return_strings = [String(item) for item in hmd_return_records]
-    #println("boo",hmd_return_strings)
-    hmd_return = [(String(item)) for item in hmd_return_strings]
+    println("boo",hmd_return_strings)
+       
+    hmd_return = [(String(item)) for item in hmd_return_strings]   
     return hmd_return
+    
     #println(section_df)
     
 end
@@ -251,16 +189,29 @@ function fn_build_hmdif(grid_data, survey_name)
     #split!.(data_out)
     #[string(i) for i in data_out]
     #[push!(HMDIF_out, string(i)) for i in data_out]
-    data_out = [join(inner_vector, " ") for inner_vector in data_out]
+    data_out = [join(inner_vector, "") for inner_vector in data_out]
     append!(HMDIF_out, data_out)
+    #println("typeof HMD_out",typeof(HMDIF_out))
 
-#
+    # remove empty (0 length) vectors in the HMD_out
+    filter!(!isempty, HMDIF_out)
+
+    function count_newlines(strings::Vector{String})
+        newline_count = 0
+        for str in strings
+          newline_count += count('\n', str)
+        end
+        return newline_count
+      end
+
+    HMDIF_count = count_newlines(HMDIF_out)
     #println(size(HMDIF_out))
-    HMDIF_count = size(HMDIF_out)[1]
+    #HMDIF_count = size(HMDIF_out)[1]
+    println("hmdif_count ", HMDIF_count)
     dend_count = Int(HMDIF_count) + 9
     #println(dend_count)
     #DEND_string = raw"DEND\\" + string(dend_value) + raw";"
-    DEND_string = "DEND\\$dend_count;"
+    DEND_string = "DEND\\$dend_count;\n"
     push!(HMDIF_out, DEND_string)
     #println(HMDIF_out)
     # print("""DEND\\""", dend_value)
@@ -277,6 +228,8 @@ end
 # TODO uncomment the following two before full test
 #grid_file_name = pick_file()
 #println(grid_file_name)
+
+#start of main
 
 # Read the first line and get the original filename from it
 
@@ -321,13 +274,27 @@ function remove_quoted_strings(HMD_output)
     return [string(item) for item in HMD_output]
 end
 
-# # Apply the function to the array
-cleaned_HMD_output = remove_quoted_strings(HMD_output)
+# # Apply the functions to the array
+#
+#
+#remove the empty lines
+#HMD_output = filter(!isempty, HMD_output)
+#HMD_output = remove_quoted_strings(HMD_output)
+#cleaned_HMD_output = DataFrame(HMD_output)
+#dropmissing!(cleaned_HMD_output, a)
 
-println(cleaned_HMD_output)
+
+# remove the space at the start of each string in a vector of strings
+#cleaned_HMD_output = map(lstrip, cleaned_HMD_output)
+#cleaned_HMD_output = map(str -> replace(str, r"^\s+" => ""), cleaned_HMD_output)
+#filter!(str -> length(str) > 3, cleaned_HMD_output)
+#replace!(cleaned_HMD_output,"\n\n" => "/n")
+println(HMD_output)
 
 open(survey_output_file, "w") do file
-    for line in cleaned_HMD_output
-        write(file, line * "\n")
+    for line in HMD_output
+        #if length(line) > 3
+        write(file, line)
+        #end
     end
 end

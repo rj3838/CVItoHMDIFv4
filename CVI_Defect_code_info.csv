@@ -1,0 +1,20 @@
+cvi_code,defect_code, direction,calc_needed
+1,BCKJ,F,L
+2,BCKJ,R,L
+3,BFEJ,F,L
+4,BFEJ,R,L
+5,BFEJ,B,L
+6,BSDE,F,L
+7,BSDE,R,L
+8,BSDE,B,L
+9,BSES,F,L
+10,BSES,R,L
+11,BSES,B,L
+12,BTCK,F,L
+13,BTCK,R,L
+14,BWTR,F,L
+15,BWTR,R,L
+16,BLED,F,L
+17,BRED,F,L
+18,BUTS,F,L
+19,BNAS,F,L
