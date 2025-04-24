@@ -89,26 +89,29 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
         
         defect_value = ""
         
-        println("returned_clusters ", returned_clusters)
+        #println("returned_clusters ", returned_clusters)
+        if !isempty(returned_clusters)
 
-        if calculation == "Length" && !isempty(returned_clusters)
-            defect_value = fn_length_calc(conv_section_df, returned_clusters, returned_rows)
-            println(calculation, " ", defect_value)
-        end
+            if calculation == "Length"
+                defect_value = fn_length_calc(conv_section_df, returned_clusters, returned_rows)
+                obval_code = "P"
+                println(calculation, " ", defect_value)
+            end
 
-        if calculation == "Lateral"
-            #fn_lateral_calc
-            println(calculation)
-        end
+            if calculation == "Lateral"
+                defect_value = fn_lateral_calc(conv_section_df, returned_clusters, returned_rows)
+                obval_code = "P"
+                println(calculation)
+            end
 
-        if calculation == "Count"
-            #fn_count_calc
-            println(calculation)
-        end
+            if calculation == "Count"
+                #fn_count_calc
+                println(calculation)
+            end
 
-        if calculation ∉ ["Length", "Lateral", "Count"]
-            println( calculation, "calculation not accepted")
-        end
+            if calculation ∉ ["Length", "Lateral", "Count"]
+                println( calculation, "calculation not accepted")
+            end
 
     #println("typeof ", typeof(returned_rows))
     # if isnothing(returned_rows)
@@ -127,7 +130,7 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
     #bnas_rows = 0
     #find_rows_with_value(select!(section_df, Not([:SectionID, :Chainage, :sectionNr])), cvi_code)
         observ_defect_record = string("OBSERV\\",section_nr,",",defect_code,",Version,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
-        obval_defect_record = string("OBVAL\\",section_nr,",1,",defect_value,",P,,;\n")
+        obval_defect_record = string("OBVAL\\",section_nr,",1,",defect_value,",",obval_code,",,;\n")
         push!(hmd_return_records,string(observ_defect_record))
         push!(hmd_return_records,string(obval_defect_record))
     end
@@ -300,4 +303,6 @@ open(survey_output_file, "w") do file
         write(file, line)
         #end
     end
+end
+
 end
