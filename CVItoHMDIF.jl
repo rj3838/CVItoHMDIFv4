@@ -33,8 +33,9 @@ end
 function find_rows_with_value(section_df::DataFrame, cvi_code::String)
     # remove the sectionID, Chainage and sectionNr columns as the string used for the cvi code can occur in 
     # those columns.
+    #print("find_rows_with_value")
      
-    rows_with_value = findall(row -> any(x -> x == cvi_code, row), eachrow(select(section_df, Not([:SectionID, :Chainage, :sectionNr]))))
+    rows_with_value = findall(row -> any(x -> x == cvi_code, row), eachrow(select(section_df, Not([:SectionID, :Chainage]))))
 
     println(typeof((section_df[rows_with_value, :]))) #0
     #println("typeof ",typeof(rows_with_value))
@@ -42,6 +43,7 @@ function find_rows_with_value(section_df::DataFrame, cvi_code::String)
     println(row_number)
     #filter(row -> any(x -> x == value, row), eachrow(df))
     #@where(df, findall(x -> x == value))
+    #print("exit find_rows_with_value")
     return row_number
 end
 
@@ -83,11 +85,14 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
     #cvi_code = "19"
     # how many rows contain a 19
     #println("typeof", typeof(find_rows_with_value(section_df, cvi_code)))
+
+        # convert the grouped DF to a standard DF
         conv_section_df = DataFrame(section_df)
         returned_clusters = find_value_clusters(conv_section_df, cvi_code)
         returned_rows = find_rows_with_value(conv_section_df, cvi_code)
         
         defect_value = ""
+        obval_code = ""
         
         #println("returned_clusters ", returned_clusters)
         if !isempty(returned_clusters)
@@ -95,23 +100,25 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
             if calculation == "Length"
                 defect_value = fn_length_calc(conv_section_df, returned_clusters, returned_rows)
                 obval_code = "P"
-                println(calculation, " ", defect_value)
+                println(calculation, "Length", defect_value)
             end
 
             if calculation == "Lateral"
                 defect_value = fn_lateral_calc(conv_section_df, returned_clusters, returned_rows)
                 obval_code = "P"
-                println(calculation)
+                println(calculation, "Lateral  ", defect_value)
             end
 
             if calculation == "Count"
-                #fn_count_calc
-                println(calculation)
+                defect_value = fn_count_calc(conv_section_df, returned_clusters, returned_rows)
+                println(calculation, "Count ", defect_value)
             end
 
             if calculation ∉ ["Length", "Lateral", "Count"]
                 println( calculation, "calculation not accepted")
             end
+
+        end
 
     #println("typeof ", typeof(returned_rows))
     # if isnothing(returned_rows)
@@ -129,10 +136,36 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
     #println("returned_rows", bnas_rows)
     #bnas_rows = 0
     #find_rows_with_value(select!(section_df, Not([:SectionID, :Chainage, :sectionNr])), cvi_code)
-        observ_defect_record = string("OBSERV\\",section_nr,",",defect_code,",Version,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
-        obval_defect_record = string("OBVAL\\",section_nr,",1,",defect_value,",",obval_code,",,;\n")
-        push!(hmd_return_records,string(observ_defect_record))
-        push!(hmd_return_records,string(obval_defect_record))
+        #num_defect_value = parse(Float64, defect_value)
+        println("Defect check")
+        println(typeof(defect_value), " ", defect_value)
+
+        #if typeof(defect_value) == "String"
+        #    println("Defect check is a string")
+        #    float_defect_value = 0
+        #end
+
+        #try
+        #    float_defect_value = parse(Float64, defect_value)
+        #catch e 
+        #    float_defect_value = 0
+        #end
+
+        if defect_value isa Number
+            check_defect_value = defect_value
+        else
+            check_defect_value = 0
+        end
+        
+        check_value ::Int64 = 0
+
+        if check_defect_value > check_value #|| (!isempty(defect_value))
+
+            observ_defect_record = string("OBSERV\\",section_nr,",",defect_code,",Version,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
+            obval_defect_record = string("OBVAL\\",section_nr,",1,",defect_value,",",obval_code,",,;\n")
+            push!(hmd_return_records,string(observ_defect_record))
+            push!(hmd_return_records,string(obval_defect_record))
+        end
     end
     hmd_return_strings = [String(item) for item in hmd_return_records]
     #println("boo",hmd_return_strings)
@@ -165,7 +198,7 @@ function fn_hmd_cvi_data_records(grid_data)
     gdf_grid_data = groupby(grid_data, [:SectionID, :sectionNr])
     # now for each grouped DF create records for section + observ + obval 
 
-    println(gdf_grid_data) # just to check
+    #println(gdf_grid_data) # just to check
 
     gdf_data_records = fn_gdf_iterate(gdf_grid_data)
 
@@ -305,4 +338,3 @@ open(survey_output_file, "w") do file
     end
 end
 
-end

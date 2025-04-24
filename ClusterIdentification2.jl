@@ -29,6 +29,9 @@ function find_value_clusters(
 
     println("find_value_clusters")
 
+    # remove the sectionNr or the clusters will incluce the sectionNr !
+    select!(input_df, Not(:sectionNr))
+
     # Check for valid connectivity type.
     # if connectivity != :rook && connectivity != :queen
     #     throw(ArgumentError("connectivity must be either :rook or :queen"))
@@ -44,7 +47,7 @@ function find_value_clusters(
             end
         end
     end
-
+    println("leaving find_value_clusters")
     # Handle the case where the target value is not found.
     if isempty(coordinates)
         return []
@@ -108,6 +111,7 @@ function find_value_clusters(
         end
         push!(clusters, cluster)
     end
+    println("clusters ",clusters)
     return clusters
 end
 
