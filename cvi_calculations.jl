@@ -106,7 +106,7 @@ end
 
 function fn_count_calc(section_df,returned_clusters, returned_rows) 
 
-    defect_percentage = 1
-    return defect_percentage
+    defect_rows = returned_rows
+    return defect_rows
 
 end
