@@ -63,6 +63,9 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
     #println("sectoin ",hmd_section_record)
     push!(hmd_return_records,string(hmd_section_record))
 
+    # start the observation counter for this section
+    observation_number = 0
+
     # read the defect code list
 
     defect_code_list = CSV.read("CVI_Defect_code_info.csv", DataFrame)
@@ -74,7 +77,7 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
         defect_code = row[2]
         survey_direction = row[3]
         calculation = row[4]
-
+        
         println(cvi_code, " ", defect_code, " ", survey_direction, " ", calculation)
     
     #observ and obval templates are :
@@ -94,8 +97,11 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
         defect_value = ""
         obval_code = ""
         
+        
         #println("returned_clusters ", returned_clusters)
         if !isempty(returned_clusters)
+
+            #global observation_number += 1
 
             if calculation == "Length"
                 defect_value = fn_length_calc(conv_section_df, returned_clusters, returned_rows)
@@ -111,6 +117,7 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
 
             if calculation == "Count"
                 defect_value = fn_count_calc(conv_section_df, returned_clusters, returned_rows)
+                obval_code = 'V'
                 println(calculation, "Count ", defect_value)
             end
 
@@ -161,8 +168,10 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
 
         if check_defect_value > check_value #|| (!isempty(defect_value))
 
-            observ_defect_record = string("OBSERV\\",section_nr,",",defect_code,",Version,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
-            obval_defect_record = string("OBVAL\\",section_nr,",1,",defect_value,",",obval_code,",,;\n")
+            observation_number += 1
+
+            observ_defect_record = string("OBSERV\\",observation_number,",",defect_code,",235,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
+            obval_defect_record = string("OBVAL\\1,1,",defect_value,",",obval_code,",,;\n")
             push!(hmd_return_records,string(observ_defect_record))
             push!(hmd_return_records,string(obval_defect_record))
         end
@@ -216,14 +225,14 @@ function fn_build_hmdif(grid_data, survey_name)
 # Build the output HMDIF
 # header is standard
     HMDIF_out = String[] # empty list/array
-    line1 = "HMSTART ukPMS 001  ; , \\"
-    line2 = "TSTART;"
-    line3 = "SURVEY\\TYPE,VERSION,NUMBER,NAME,SUBSECT,CWXSPUSED,OFFCWXSPUSED;"
-    line4 = "SECTION\\NETWORK,NUMBER,LABEL,NORMDIR,SURVDIR,MASTER,LENGTH,COMMENT,SDATE,EDATE,STIME,ETIME,INSP;"
-    line5 = "OBSERV\\NUMBER,DEFECT,VERSION,XSECT,SCHAIN,ECHAIN;"
-    line6 = "OBVAL\\PARM,OPTION,VALUE,PERCENT;"
-    line7 = "TEND\\7;"
-    line8 = "DSTART;"
+    line1 = "HMSTART ukPMS 001  ; , \\\n"
+    line2 = "TSTART;\n"
+    line3 = "SURVEY\\TYPE,VERSION,NUMBER,NAME,SUBSECT,CWXSPUSED,OFFCWXSPUSED;\n"
+    line4 = "SECTION\\NETWORK,NUMBER,LABEL,NORMDIR,SURVDIR,MASTER,LENGTH,COMMENT,SDATE,EDATE,STIME,ETIME,INSP;\n"
+    line5 = "OBSERV\\NUMBER,DEFECT,VERSION,XSECT,SCHAIN,ECHAIN;\n"
+    line6 = "OBVAL\\PARM,OPTION,VALUE,PERCENT;\n"
+    line7 = "TEND\\7;\n"
+    line8 = "DSTART;\n"
 
     push!(HMDIF_out, line1,
                     line2,
@@ -247,9 +256,6 @@ function fn_build_hmdif(grid_data, survey_name)
 
     data_out = fn_hmd_cvi_data_records(grid_data)
     #println("out",data_out)
-    #split!.(data_out)
-    #[string(i) for i in data_out]
-    #[push!(HMDIF_out, string(i)) for i in data_out]
     data_out = [join(inner_vector, "") for inner_vector in data_out]
     append!(HMDIF_out, data_out)
     #println("typeof HMD_out",typeof(HMDIF_out))
@@ -286,18 +292,16 @@ function fn_build_hmdif(grid_data, survey_name)
     return HMDIF_out
 end
 
-# TODO uncomment the following two before full test
-#grid_file_name = pick_file()
-#println(grid_file_name)
-
 #start of main
 
-# Read the first line and get the original filename from it
-
 # Open the file in read mode
+# reverse the commenting to test file selection
+#grid_file_name = pick_file()
+#println(grid_file_name)
 #file = open(grid_file_name, "r")
 file = open("Test Grid 3.grd", "r")
 
+# Read the first line and get the original filename from it
 # Read the first line and close it
 first_line = readline(file)
 close(file)
