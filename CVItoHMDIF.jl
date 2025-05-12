@@ -77,6 +77,7 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
         defect_code = row[2]
         survey_direction = row[3]
         calculation = row[4]
+        lower_limit = row[5]
         
         println(cvi_code, " ", defect_code, " ", survey_direction, " ", calculation)
     
@@ -122,41 +123,15 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
             end
 
             if calculation ∉ ["Length", "Lateral", "Count"]
-                println( calculation, "calculation not accepted")
+                println( calculation, "calculation not accepted, check defect code info CSV")
             end
 
         end
 
-    #println("typeof ", typeof(returned_rows))
-    # if isnothing(returned_rows)
-    #     bnas_rows = 0
-    # else
-    #     bnas_rows = nrow(returned_rows)
-    # end
-
-    # try
-    #     bnas_rows = nrow(returned_rows)
-    #     println("rows found ", returned_rows)
-    # catch exc
-    #     bnas_rows = 0
-    # end
-    #println("returned_rows", bnas_rows)
-    #bnas_rows = 0
-    #find_rows_with_value(select!(section_df, Not([:SectionID, :Chainage, :sectionNr])), cvi_code)
-        #num_defect_value = parse(Float64, defect_value)
         println("Defect check")
         println(typeof(defect_value), " ", defect_value)
 
-        #if typeof(defect_value) == "String"
-        #    println("Defect check is a string")
-        #    float_defect_value = 0
-        #end
-
-        #try
-        #    float_defect_value = parse(Float64, defect_value)
-        #catch e 
-        #    float_defect_value = 0
-        #end
+        # when the defect value is not a number don't bother processing it so set it to zero
 
         if defect_value isa Number
             check_defect_value = defect_value
@@ -164,7 +139,9 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
             check_defect_value = 0
         end
         
-        check_value ::Int64 = 0
+        check_value ::Int64 = lower_limit
+
+        # for some defects the defect value must exceed a metre.
 
         if check_defect_value > check_value #|| (!isempty(defect_value))
 
@@ -294,51 +271,57 @@ end
 
 #start of main
 
+function main()
+    println("CVI to HMDIF")
+    println("Select a CVI grid file to convert to HMDIF")
+
 # Open the file in read mode
 # reverse the commenting to test file selection
 #grid_file_name = pick_file()
 #println(grid_file_name)
 #file = open(grid_file_name, "r")
-file = open("Test Grid 3.grd", "r")
+    file = open("Test Grid 3.grd", "r")
 
 # Read the first line and get the original filename from it
 # Read the first line and close it
-first_line = readline(file)
-close(file)
+    first_line = readline(file)
+    close(file)
 
 # Print the first line
-println(first_line)
+    println(first_line)
 
 #Use the string after the word 'file' as the survey name
 
-survey_name = split(first_line, r"^.+file ")[:2]
+    survey_name = split(first_line, r"^.+file ")[:2]
 
 # print(survey_name)
 
 
 # replace the spaces with an underscore and append HMD
-survey_output_file = string(replace(survey_name, " " => "_") * ".HMD")
+    survey_output_file = string(replace(survey_name, " " => "_") * ".HMD")
 
-println("output file is ", survey_output_file)
+    println("output file is ", survey_output_file)
 
 #now go and get the full file skipping the first 22 rows as they are the explanation of the codes.
-grid_file_name = "Test Grid 3.grd"
+    grid_file_name = "Test Grid 3.grd"
 
-grid_data = CSV.read(grid_file_name, DataFrame; header=22,
+    grid_data = CSV.read(grid_file_name, DataFrame; header=22,
                                                 silencewarnings=true)
 
 
-HMD_output = fn_build_hmdif(grid_data, survey_name) 
+    HMD_output = fn_build_hmdif(grid_data, survey_name) 
 
 #print(typeof(HMD_output))
 
 #println(HMD_output)
 
-open(survey_output_file, "w") do file
-    for line in HMD_output
-        #if length(line) > 3
-        write(file, line)
+    open(survey_output_file, "w") do file
+        for line in HMD_output
+            #if length(line) > 3
+            write(file, line)
         #end
+        end
     end
 end
 
+main()
