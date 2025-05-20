@@ -15,9 +15,9 @@ function route_csv_to_df_processing()
     #df.Section_data = string.(df.Section, "_", df."GRD Start Ch")
     rename!(df, :"GRD Start Ch" => :"GRD_Start_Ch")
     rename!(df, :"GRD End Ch" => :"GRD_End_Ch")
-    println("df ", df)
+    
     transform!(df, [:Section, :GRD_Start_Ch] => ((a, b) -> string.(a .* "_" .* string.(b))) => :Section_data)
-
+    #rintln("df ", df)
 # Display the DataFrame
     return df
 

@@ -220,7 +220,7 @@ function fn_build_hmdif(grid_data, survey_name)
                     line7,
                     line8)
 
-    survey_record = "SURVEY\\CVI,235,5,$survey_name,,,;"
+    survey_record = "SURVEY\\CVI,235,5,$survey_name,,,;\n"
     push!(HMDIF_out,survey_record)
     #println(HMDIF_out)
     #println(typeof(HMDIF_out))
@@ -280,7 +280,7 @@ function main()
 #grid_file_name = pick_file()
 #println(grid_file_name)
 #file = open(grid_file_name, "r")
-    file = open("Test Grid 3.grd", "r")
+    file = open("Zone1_Route1.grd", "r")
 
 # Read the first line and get the original filename from it
 # Read the first line and close it
@@ -303,17 +303,20 @@ function main()
     println("output file is ", survey_output_file)
 
 #now go and get the full file skipping the first 22 rows as they are the explanation of the codes.
-    grid_file_name = "Test Grid 3.grd"
+    grid_file_name = "Zone1_Route1.grd"
 
     grid_data = CSV.read(grid_file_name, DataFrame; header=22,
                                                 silencewarnings=true)
 
 
-    HMD_output = fn_build_hmdif(grid_data, survey_name) 
+    HMD_output = fn_build_hmdif(grid_data, survey_name)
+    println("survey name ", survey_name)
 
 #print(typeof(HMD_output))
 
 #println(HMD_output)
+
+
 
     open(survey_output_file, "w") do file
         for line in HMD_output
