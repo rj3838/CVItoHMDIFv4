@@ -37,12 +37,16 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
     
     function string_vector_to_int_vector(str_vec::Vector{String})::Vector{Int64}
     # this converts a vector of strings to a vector of integers (deals with column headers)
+        # remove the underscore from the column names passed in to the function.
+        str_vec = replace.(str_vec, "_" => "")
         int_vec = Vector{Int64}(undef, length(str_vec))
-        for i in eachindex(str_vec)
+        for i in eachindex(str_vec[1:20])
+            println(str_vec)
             try
-                int_vec[i] = parse(Int64, str_vec[i])
+                int_vec[i] = parse(Int16, str_vec[i])
+                #int_vec[i] = parse(Int64, str_vec[i])
             catch e
-                if e isa ParseError
+                if e isa ArgumentError
                     @warn "Could not parse string '$(str_vec[i])' to Int64 at index $i. Skipping this element."
                 else
                     rethrow(e) # Re-throw other types of errors

@@ -12,8 +12,9 @@ function main()
     println("calling update_section.jl")
 
     merged_df = update_section(grid_df, route_df)
-    #println("Merged DataFrame:")
-    println(typeof(merged_df))
+    println("Merged DataFrame:")
+    #rintln(typeof(merged_df))
+    println(merged_df)
 
 end
 

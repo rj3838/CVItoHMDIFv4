@@ -1,32 +1,16 @@
-function read_data_grid()
+function read_data_grid(filepath::String)
 
-    csv_file = "Zone1_Route1.grd"
+    #csv_file = "Zone1_Route1.grd"
 
     # Read the CSV file into a DataFrame
-    #df = CSV.read(csv_file, DataFrame; delim=',', header=22,
-    #                        silencewarnings=true,
-    #                        ignorerepeated=true)
-
-    #println(first(df, 5))
-    function read_until_empty(filename)
-    rows = []
-    open(filename, "r") do io
-        header = readline(io)
-        push!(rows, header)
-        for line in eachline(io)
-            if isempty(strip(line))
-                break
-            end
-            push!(rows, line)
-        end
-    end
-    return CSV.read(IOBuffer(join(rows, "\n")), DataFrame; skipto=23, delim=',',
+    input_df = CSV.read(filepath, DataFrame; delim=',', header=22,
                         silencewarnings=true,
-                        ignorerepeated=true)    
-end
-
-df = read_until_empty("Zone1_Route1.grd")
-    
-return df
-
+ #                       ignorerepeated=true,
+                        normalizenames=true,
+                        missingstring="")
+    # drop the rows with a missing item this is everything after and including the empty line
+    input_df = dropmissing(input_df)
+        
+       
+    return input_df
 end
