@@ -1,6 +1,6 @@
 function fn_length_calc(section_df,returned_clusters, returned_rows) 
     
-    println(typeof(returned_clusters))
+    println("type of returned clusters ",typeof(returned_clusters))
     first_inner_vector = first(returned_clusters)
     first_row = first(first_inner_vector)[1]
     println("first_row ", first_row)
@@ -41,7 +41,7 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
         str_vec = replace.(str_vec, "_" => "")
         int_vec = Vector{Int64}(undef, length(str_vec))
         for i in eachindex(str_vec[1:20])
-            println(str_vec)
+            #println(str_vec)
             try
                 int_vec[i] = parse(Int16, str_vec[i])
                 #int_vec[i] = parse(Int64, str_vec[i])
@@ -56,7 +56,8 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
         return filter(!isnan, int_vec) # Remove any NaN values that might have resulted from parsing failures
     end
     
-    println(returned_clusters)
+    println("type of returned clusters ",typeof(returned_clusters))
+    #println(returned_clusters)
     first_inner_vector = first(returned_clusters)
     first_column = minimum(first_inner_vector)[2]
     println("first_column ", first_column)
@@ -110,6 +111,7 @@ end
 
 function fn_count_calc(section_df,returned_clusters, returned_rows) 
 
+    println("type of returned clusters ",typeof(returned_clusters))
     defect_rows = returned_rows
     return defect_rows
 

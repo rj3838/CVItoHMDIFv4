@@ -27,7 +27,7 @@ function find_value_clusters(
     target_value:: Any;
     connectivity::Symbol = :queen,)
 
-    println("find_value_clusters")
+    println("find_value_clusters target value ", target_value)
 
     # remove the sectionNr or the clusters will incluce the sectionNr !
     select!(input_df, Not(:sectionNr))
@@ -47,7 +47,7 @@ function find_value_clusters(
             end
         end
     end
-    println("leaving find_value_clusters")
+    println("leaving find_value_clusters ", coordinates)
     # Handle the case where the target value is not found.
     if isempty(coordinates)
         return []
