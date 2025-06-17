@@ -16,32 +16,24 @@ include("cvi_calculations.jl")
 include("update_grid_with_section_2.jl")
 include("Section_length.jl")
 include("read_grid.jl")
+include("fn_hmd_cvi_data_records.jl")
+include("find_rows_with_value.jl")
+include("create_survey_name.jl")
+include("open_route_file.jl")
+include("open_section_file.jl")
+include("build_main_df.jl")
+include("build_hmdif_header_block.jl")
+include("process_combined_data.jl")
+include("process_section_records.jl")
+include("correct_split_sections.jl")
+include("merge_split_section.jl")
+
 
 function fn_gdf_iterate(gdf_passed)
 
     println("calling section process")
     [section_process(i) for i in gdf_passed]
 
-end
-
-# Function to find rows containing a specific value
-
-
-function find_rows_with_value(section_df::DataFrame, cvi_code::String)
-    # remove the sectionID, Chainage and sectionNr columns as the string used for the cvi code can occur in 
-    # those columns.
-    #print("find_rows_with_value")
-     
-    rows_with_value = findall(row -> any(x -> x == cvi_code, row), eachrow(select(section_df, Not([:SectionID, :Chainage]))))
-
-    #p#rintln(typeof((section_df[rows_with_value, :]))) #0
-    #println("typeof ",typeof(rows_with_value))
-    row_number = size(section_df[rows_with_value, :],1)
-    #println(row_number)
-    #filter(row -> any(x -> x == value, row), eachrow(df))
-    #@where(df, findall(x -> x == value))
-    #print("exit find_rows_with_value")
-    return row_number
 end
 
 function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, Vector{Int64}})
@@ -197,38 +189,6 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
     
 end
 
-
-function fn_hmd_cvi_data_records(grid_data)
-
-    #this function needs the grid data to be modified before with the route information beforehand
-    # in this way the grid data will only contain the relevant data for the survey
-
-    # drop rows with missing fields, this drops the dummy OSGR data at the end of the file.
-    dropmissing!(grid_data)
-    
-    # convert the chainage to a float then
-    # create a new column using flooring division on the Chaniage to produce a 'new' section number each 20m
-    # then convert it to a string.
-    #transform!(grid_data, :Chainage => ByRow(x -> parse(Float64, x)) => :Chainage)
-    @rtransform!(grid_data, :sectionNr = fld1(:Chainage, 20))
-    @rtransform!(grid_data, :sectionNr = string(round(Int, :sectionNr)))
-
-    # Section Id and sectionNr can now be used to create a grouped data frame.
-
-    gdf_grid_data = groupby(grid_data, [:SectionID, :StartCh])
-
-    # now for each grouped DF create records for section + observ + obval 
-
-    #println(gdf_grid_data) # just to check
-
-    gdf_data_records = fn_gdf_iterate(gdf_grid_data)
-
-    # don't forget to return the data record strings.
-    #print(gdf_data_records)
-
-    return gdf_data_records
-end
-
 function fn_build_hmdif(grid_data, survey_name, route_data)
 
 # Build the output HMDIF
@@ -287,9 +247,9 @@ function fn_build_hmdif(grid_data, survey_name, route_data)
     #     end
     #     return newline_count
     #   end
-    # Suppose HMDIF_out is your vector of strings, each possibly containing \n
+    #  HMDIF_out is a vector of strings, each possibly containing \n
     HMDIF_out = collect(Iterators.flatten(split.(HMDIF_out, '\n')))
-    # then remove the empty occurrences
+    # then remove the empty occurrences (shouldn't be any, but...)
     HMDIF_out = filter(!isempty, HMDIF_out)
     # add a newline chatecter to the end of each string
     HMDIF_out = [string(item, "\n") for item in HMDIF_out]
@@ -313,37 +273,6 @@ function fn_build_hmdif(grid_data, survey_name, route_data)
     return HMDIF_out
 end
 
-function create_survey_name(grid_file_name)
-    # open the grid_file_name in read mode
-    grid_file = open(grid_file_name, "r")
-
-    # Read the first line and get the original filename from item
-
-    first_line = readline(grid_file)
-    close(grid_file)
-
-    # Print the first line
-    println(first_line)
-
-    #Use the string after the word 'file' as the survey name
-
-    survey_name = split(first_line, r"^.+file ")[:2]
-
-    print("survey_name", survey_name)
-
-    # replace the spaces with an underscore
-    survey_name = string(replace(survey_name, " " => "_"))
-    # append .hmd to the survey name
-    survey_hmd_file = string(survey_name, ".HMD")
-    #survey_output_file = string(replace(survey_name, " " => "_") * ".HMD")
-
-    println("survey name is ",survey_name)
-    println("output file is ", survey_hmd_file)
-
-    return survey_hmd_file, survey_name
-
-end
-
 #start of main
 
 function main()
@@ -361,38 +290,101 @@ function main()
 
     # create the survey name and survey file name and read the grid
 
-    survey_output_file, survey_ID = create_survey_name(grid_file_name)
+    #survey_output_file, survey_ID = create_survey_name(grid_file_name)
 
     #println("survey name ", survey_ID)
     #println("survey output file ", survey_output_file)     
 
-    grid_data = read_data_grid(grid_file_name)
+    grid_df = read_data_grid(grid_file_name)
 
     # change the filetype to be csv and read the route file
+
     route_file_name = string(replace(grid_file_name, ".grd" => ".csv"))
 
-    route_data = CSV.read(route_file_name, DataFrame; delim=','
-                                         ,header=true
-                                         ,normalizenames=true,)
-    #println("route_data_names",names(route_data))
-    #rename!(route_data, [col => replace(col, " " => "_") for col in names(route_data)])
-    println("replaced route data names ", names(route_data))
-    HMD_output = fn_build_hmdif(grid_data, survey_ID, route_data)
-    #println("survey name ", survey_name)
+    route_df = open_route_file(route_file_name)
 
-#print(typeof(HMD_output))
+    section_file_name = "East Sussex Sections 2025.csv"
+
+    # read the section file
+    section_df = open_section_file(section_file_name)
+
+    #println("grid data headers ", names(grid_df))
+    #println("route data headers ", names(route_df))
+    #println("section data headers ", names(section_df))
+
+    # take the three data frames and merge/join them to produce a single dataframe 
+    # that can be processed by survey, section and observation.
+
+    combined_df  = build_main_df(grid_df, route_df, section_df)
+
+    #All the needed data is now in the combined_df
+
+    #create the survey name and survey file name
+    survey_output_file, survey_ID = create_survey_name(grid_file_name)
+    println("survey name ", survey_ID)
+    println("survey output file ", survey_output_file)
+
+    # create the HMD header block
+
+    HMD_output = build_hmdif_header_block(survey_ID)
+
+    println("HMD header block ", HMD_output)
+
+    network_gdf = groupby(combined_df, :Network)
+
+    for gdf in network_gdf
+        println("Network ", gdf.Network[1])
+        #println("gdf ", gdf)
+        #println("gdf names ", names(gdf))
+        #println("gdf length ", nrow(gdf))
+        #println("gdf type ", typeof(gdf))
+        #println("gdf section ID ", gdf.SectionID[1])
+        #println("gdf section number ", gdf.sectionNr[1])
+        #println("gdf start chainage ", first(gdf.Chainage))
+        #println("gdf last chainage ", last(gdf.Chainage))
+        #println("gdf length ", last(gdf.Chainage) - first(gdf.Chainage))
+        standard_df = DataFrame(gdf)
+        returned_records = process_combined_data(standard_df, survey_ID)
+        returned_records = join(returned_records)
+        print(typeof(returned_records), " ", length(returned_records), " records returned from process_combined_data")
+        push!(HMD_output, returned_records)
+    end
+
+   
+
+    # but we need to clean up the data a bit more, the data where there is a diversion off onto a different section
+    # which then returns to the original section.
+    # the main chainage doesn't change as it is the distance into the survey grid but startC, endCh and length needs
+    # to twidled a bit.
+
+    #corrected_df = correct_diverted_sections(combined_df)
+
+
+
+    #rename!(route_data, [col => replace(col, " " => "_") for col in names(route_data)])
+#     println("replaced route data names ", names(route_data))
+#     HMD_output = fn_build_hmdif(grid_data, survey_ID, route_data)
+#     #println("survey name ", survey_name)
+
+print(typeof(HMD_output))
 
 #println(HMD_output)
 
 
 
-    open(survey_output_file, "w") do file
-        for line in HMD_output
-            #if length(line) > 3
-            write(file, line)
-        #end
-        end
-    end
+open(survey_output_file, "w") do file
+     for line in HMD_output
+         if length(line) > 3
+            write(file, String(line))
+         end
+     end
+end
+
+    # if abspath(PROGRAM_FILE) == @__FILE__
+    #     main()
+    # end
+
+    # # end of main
 end
 
 main()
