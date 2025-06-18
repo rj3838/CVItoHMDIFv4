@@ -30,7 +30,7 @@ function find_value_clusters(
     println("find_value_clusters target value ", target_value)
 
     # remove the sectionNr or the clusters will incluce the sectionNr !
-    select!(input_df, Not(:sectionNr))
+    select!(input_df, Not(:SectionID))
 
     # Check for valid connectivity type.
     # if connectivity != :rook && connectivity != :queen
@@ -53,6 +53,7 @@ function find_value_clusters(
         return []
     end
 
+
     # Function to get neighbors of a given coordinate.
     function get_neighbors(coord::CartesianIndex{2}, connectivity::Symbol, max_row::Int, max_col::Int)
         neighbors = CartesianIndex{2}[]
@@ -74,7 +75,7 @@ function find_value_clusters(
                 (r + 1, c + 1),
             ]
         end
-
+        
         for (nr, nc) in candidates
             if 1 <= nr <= max_row && 1 <= nc <= max_col
                 push!(neighbors, CartesianIndex(nr, nc))
