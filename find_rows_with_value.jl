@@ -2,6 +2,13 @@ function find_rows_with_value(section_df::DataFrame, cvi_code::String)
     # remove the sectionID, Chainage and sectionNr columns as the string used for the cvi code can occur in 
     # those columns.
     #print("find_rows_with_value")
+    #println(section_df)
+
+    #section_df = section_df[:1:21]
+
+    section_df = select(section_df, Not([:Network, :SECTION_LE, :Length]))
+
+    println(section_df)
      
     rows_with_value = findall(row -> any(x -> x == cvi_code, row), eachrow(select(section_df, Not(:Chainage))))
 

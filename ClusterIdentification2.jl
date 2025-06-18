@@ -42,7 +42,9 @@ function find_value_clusters(
     for col_index in 1:ncol(input_df)
         col_name = names(input_df)[col_index]  # Get column name
         for (row_index, value) in enumerate(input_df[!, col_name])
-            if value == target_value
+            compare_value_string = string(value)
+            compare_target_value_string = string(target_value)
+            if compare_value_string == compare_target_value_string
                 push!(coordinates, CartesianIndex(row_index, col_index))
             end
         end

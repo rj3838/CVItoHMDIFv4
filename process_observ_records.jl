@@ -3,6 +3,10 @@ function process_observ_records(section_df::DataFrame, frame_number::Int)
     hmd_return_records = []
     observ_defect_record = ""
     obval_defect_record = ""
+
+    # The chainage for each observation will be
+    section_start_chainage = section_df.StartCh[1]
+    section_end_chainage = section_df.EndCh[1]
     
     # start the observation counter for this section
     observation_number = 0
@@ -83,6 +87,7 @@ function process_observ_records(section_df::DataFrame, frame_number::Int)
         end
         
         check_value ::Int64 = lower_limit
+
         println("check_value ", check_value, " defect_value ", defect_value)
 
         # for some defects the defect value must exceed a metre.
@@ -91,7 +96,9 @@ function process_observ_records(section_df::DataFrame, frame_number::Int)
 
             observation_number += 1
             defect_present = true
-            observ_defect_record = string("OBSERV\\",observation_number,",",defect_code,",235,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
+            observ_defect_record = string("OBSERV\\",frame_number,",",defect_code,",235,,",section_start_chainage,",",section_end_chainage,";\n")
+            #obval_defect_record = string("OBVAL\\1,1,",round(defect_value, digits=2),",",obval_code,",,;\n")
+            #observ_defect_record = string("OBSERV\\",frame_number,",",defect_code,",235,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
             obval_defect_record = string("OBVAL\\1,1,",round(defect_value, digits=2),",",obval_code,",,;\n")
             println("observ_defect_record ",observ_defect_record)
             println("obval_defect_record ",obval_defect_record)
@@ -119,7 +126,8 @@ function process_observ_records(section_df::DataFrame, frame_number::Int)
     # when defect is not found the section is still recorded but with a BUTS code
     if !defect_present
         observation_number += 1
-        observ_defect_record = string("OBSERV\\",observation_number,",BUTS,235,",minimum(section_df.Chainage),",",maximum(section_df.Chainage),";\n")
+        #observ_defect_record = string("OBSERV\\",frame_number,",BUTS,235,",minimum(section_df.Chainage),",",maximum(section_df.Chainage),";\n")
+        observ_defect_record = string("OBSERV\\",frame_number,",BUTS,235,,",section_start_chainage,",",section_end_chainage,";\n")
         obval_defect_record = string("OBVAL\\1,1,0,P,,;\n")
         push!(hmd_return_records,string(observ_defect_record))
         push!(hmd_return_records,string(obval_defect_record))

@@ -2,6 +2,9 @@ function hmd_tail_records(hmd_records)
     #calculate and add the DEND and HMEND records for the HMDIF file
     println("hmd_records type ",typeof(hmd_records))
 
+    # remove empty strings (lines) before the length calculation
+    #filter!(!isempty, hmd_records)
+
     hmdif_count = length(hmd_records)
 
     data_count = hmdif_count - 9 # there are 9 lines in the header
