@@ -27,6 +27,8 @@ include("process_combined_data.jl")
 include("process_section_records.jl")
 include("correct_split_sections.jl")
 include("merge_split_section.jl")
+include("process_observ_records.jl")
+include("hmd_tail_records.jl")
 
 
 function fn_gdf_iterate(gdf_passed)
@@ -287,6 +289,7 @@ function main()
 #file = open("Zone1_Route1.grd", "r")
 
     grid_file_name = "Zone1_Route1.grd"
+    #grid_file_name = "Test Grid 3.grd"
 
     # create the survey name and survey file name and read the grid
 
@@ -346,7 +349,7 @@ function main()
         standard_df = DataFrame(gdf)
         returned_records = process_combined_data(standard_df, survey_ID)
         returned_records = join(returned_records)
-        print(typeof(returned_records), " ", length(returned_records), " records returned from process_combined_data")
+        println(typeof(returned_records), " ", length(returned_records), " records returned from process_combined_data")
         push!(HMD_output, returned_records)
     end
 
@@ -366,9 +369,21 @@ function main()
 #     HMD_output = fn_build_hmdif(grid_data, survey_ID, route_data)
 #     #println("survey name ", survey_name)
 
-print(typeof(HMD_output))
+println(typeof(HMD_output))
 
 #println(HMD_output)
+
+hmd_tail = hmd_tail_records(HMD_output)
+
+    #println("hmd_tail ", hmd_tail)
+
+# add the tail records to the HMD output
+append!(HMD_output, hmd_tail)
+
+#println("HMD output ", HMD_output)
+
+# write the HMD output to a file
+println("Writing HMDIF output to file ", survey_output_file)
 
 
 

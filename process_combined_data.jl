@@ -71,9 +71,9 @@ function process_combined_data(combined_df::DataFrame, survey_ID::String)
     #     end
     # end
 
-    CSV.write("new_survey_records.csv", df_merged, header=true)
+    #CSV.write("new_survey_records.csv", df_merged, header=true)
 
-    survey_df = DataFrame(df_merged)
+    survey_df = DataFrame(combined_df)
 
     #section_gdf = groupby(survey_gdf, [:SectionID, :Chainage])
     section_gdf = groupby(survey_df, :SectionID)
@@ -87,9 +87,13 @@ function process_combined_data(combined_df::DataFrame, survey_ID::String)
         # Create a section record for each network
         println("scetion_nunmber : ", section_number)
         section_records = process_section_records(section_df, network, section_number)
+        println("Section records: ", section_records)
+        println(typeof(section_records))
         
         for record in section_records
             # println("Adding section record: ", record)
+            # convert to string and append a newline
+            record = string(record)
             push!(survey_records, record)
         end
         #push!(survey_records, section_records)

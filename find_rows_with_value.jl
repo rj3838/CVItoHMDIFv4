@@ -3,7 +3,7 @@ function find_rows_with_value(section_df::DataFrame, cvi_code::String)
     # those columns.
     #print("find_rows_with_value")
      
-    rows_with_value = findall(row -> any(x -> x == cvi_code, row), eachrow(select(section_df, Not([:SectionID, :Chainage]))))
+    rows_with_value = findall(row -> any(x -> x == cvi_code, row), eachrow(select(section_df, Not(:Chainage))))
 
     #p#rintln(typeof((section_df[rows_with_value, :]))) #0
     #println("typeof ",typeof(rows_with_value))

@@ -29,4 +29,29 @@ function process_section_records(section_frame, network, section_number)
          
     push!(survey_records, survey_string)
 
+    # so the observ and obval lines are processed for each section they need to be
+    # processed in the context of the section they belong to.
+    # This means that the section_frame should be used to create the observ and obval lines
+    # for each section.
+
+    # produce a grouped data frame broken into 20 metre subsections
+    # this is done by grouping the section_frame by SectionID and then by StartCh (which changes every 20 metres)
+    grouped_section = groupby(section_frame, [:SectionID, :StartCh]) 
+
+    println("Grouped section: ", grouped_section)
+
+    #pass the grouped section to the process_observations function
+
+    for (frame_number,section_df) in enumerate(grouped_section)
+        # which frame number is this
+
+        #println("Processing section_df: ", section_df)
+        # process the observations and obvals for each section
+        section_df = DataFrame(section_df)  # Ensure section_df is a DataFrame
+        hmd_records = process_observ_records(section_df, frame_number)
+        #println("HMD Records: ", hmd_records)
+        # append the records to the survey records
+        append!(survey_records, hmd_records)
+    end
+    return survey_records
 end
