@@ -78,7 +78,7 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
         calculation = row[4]
         lower_limit = row[5]
         
-        println(cvi_code, " ", defect_code, " ", survey_direction, " ", calculation, " ", lower_limit)
+        #println(cvi_code, " ", defect_code, " ", survey_direction, " ", calculation, " ", lower_limit)
     
     #observ and obval templates are :
     #OBSERV\\NUMBER,DEFECT,VERSION,XSECT,SCHAIN,ECHAIN;"
@@ -91,9 +91,9 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
 
         # convert the grouped DF to a standard DF
         conv_section_df = DataFrame(section_df)
-        println("cvi_code ", cvi_code)
+        #println("cvi_code ", cvi_code)
         returned_clusters = find_value_clusters(conv_section_df, cvi_code)
-        println("returned_clusters ", returned_clusters)
+        println("returned_clusters type ", typeof(returned_clusters))
         returned_rows = find_rows_with_value(conv_section_df, cvi_code)
         
         defect_value = ""
@@ -127,8 +127,8 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
 
         end
 
-        println("Defect check")
-        println(typeof(defect_value), " ", defect_value)
+        #println("Defect check")
+        #println(typeof(defect_value), " ", defect_value)
 
         # when the defect value is not a number don't bother processing it so set it to zero
 
@@ -139,7 +139,7 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
         end
         
         check_value ::Int64 = lower_limit
-        println("check_value ", check_value, " defect_value ", defect_value)
+        #println("check_value ", check_value, " defect_value ", defect_value)
 
         # for some defects the defect value must exceed a metre.
 
@@ -149,8 +149,8 @@ function section_process(section_df::SubDataFrame{DataFrame, DataFrames.Index, V
             defect_present = true
             observ_defect_record = string("OBSERV\\",observation_number,",",defect_code,",235,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
             obval_defect_record = string("OBVAL\\1,1,",round(defect_value, digits=2),",",obval_code,",,;\n")
-            println("observ_defect_record ",observ_defect_record)
-            println("obval_defect_record ",obval_defect_record)
+            #println("observ_defect_record ",observ_defect_record)
+            #println("obval_defect_record ",obval_defect_record)
         # else
         #     println("Defect value ", defect_value, " is less than the lower limit ", lower_limit, " or no defect so not recorded")
         #     observ_defect_record = string("OBSERV\\",observation_number,",BNAS,235,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
@@ -214,10 +214,12 @@ function fn_build_hmdif(grid_data, survey_name, route_data)
                     line7,
                     line8)
 
-    survey_record = "SURVEY\\CVI,235,5,$survey_name,,,;\n"
-    push!(HMDIF_out,survey_record)
+    #survey_record = "SURVEY\\CVI,235,5,$survey_name,,,;\n"
+    #push!(HMDIF_out,survey_record)
            
     #HMDIF_out = split(HMDIF_header, '\r')
+
+    println(HMDIF_out)
 
     # combine the route and the grid data so it will only contain sections from the survey(s) of interest.
 
@@ -237,7 +239,7 @@ function fn_build_hmdif(grid_data, survey_name, route_data)
     #println("typeof HMD_out",typeof(HMDIF_out))
 
     #dend_count = length(data_out)
-    println(typeof(data_out), length(data_out))
+    #println(typeof(data_out), length(data_out))
     #dend_count = count('\n', data_out)
     # remove empty (0 length) vectors in the HMD_out
     filter!(!isempty, HMDIF_out)
@@ -256,7 +258,7 @@ function fn_build_hmdif(grid_data, survey_name, route_data)
     # add a newline chatecter to the end of each string
     HMDIF_out = [string(item, "\n") for item in HMDIF_out]
     #HMDIF_count = count_newlines(HMDIF_out)
-    println("typeof hmd_out ",HMDIF_out)
+    #println("typeof hmd_out ",HMDIF_out)
     HMDIF_count = size(HMDIF_out)[1]
     #println("hmdif_count ", HMDIF_count)
     dend_count = Int(HMDIF_count) - 8 
@@ -288,7 +290,7 @@ function main()
 #file = open(grid_file_name, "r")
 #file = open("Zone1_Route1.grd", "r")
 
-    grid_file_name = "Zone1_Route1.grd"
+    grid_file_name = "AdHoc-Rickney.grd"
     #grid_file_name = "Test Grid 3.grd"
 
     # create the survey name and survey file name and read the grid
@@ -324,19 +326,24 @@ function main()
 
     #create the survey name and survey file name
     survey_output_file, survey_ID = create_survey_name(grid_file_name)
-    println("survey name ", survey_ID)
-    println("survey output file ", survey_output_file)
+    #println("survey name ", survey_ID)
+    #println("survey output file ", survey_output_file)
 
     # create the HMD header block
 
     HMD_output = build_hmdif_header_block(survey_ID)
 
-    println("HMD header block ", HMD_output)
+    #println("HMD header block ", HMD_output)
 
-    network_gdf = groupby(combined_df, :Network)
+    network_gdf = DataFrames.groupby(combined_df, :Network)
 
     for gdf in network_gdf
         println("Network ", gdf.Network[1])
+        # if there is nothing in the network (gdf length is 0)
+        # process the next gdf
+        if nrow(gdf) == 0
+            continue
+        end
         #println("gdf ", gdf)
         #println("gdf names ", names(gdf))
         #println("gdf length ", nrow(gdf))
@@ -348,9 +355,10 @@ function main()
         #println("gdf length ", last(gdf.Chainage) - first(gdf.Chainage))
         standard_df = DataFrame(gdf)
         returned_records = process_combined_data(standard_df, survey_ID)
-        returned_records = join(returned_records)
-        println(typeof(returned_records), " ", length(returned_records), " records returned from process_combined_data")
-        push!(HMD_output, returned_records)
+        #returned_records = join(returned_records)
+        #println(typeof(returned_records), " ", length(returned_records), " records returned from process_combined_data")
+        #println(typeof(HMD_output), " ", length(HMD_output))
+        append!(HMD_output, returned_records)
     end
 
    
@@ -369,9 +377,11 @@ function main()
 #     HMD_output = fn_build_hmdif(grid_data, survey_ID, route_data)
 #     #println("survey name ", survey_name)
 
-println(typeof(HMD_output))
+#println(typeof(HMD_output))
 
 #println(HMD_output)
+
+filter!(s -> !isempty(s), HMD_output)
 
 hmd_tail = hmd_tail_records(HMD_output)
 
@@ -380,10 +390,10 @@ hmd_tail = hmd_tail_records(HMD_output)
 # add the tail records to the HMD output
 append!(HMD_output, hmd_tail)
 
-#println("HMD output ", HMD_output)
+#println("HMD output type ", typeof(HMD_output))
 
 # write the HMD output to a file
-println("Writing HMDIF output to file ", survey_output_file)
+#println("Writing HMDIF output to file ", survey_output_file)
 
 
 

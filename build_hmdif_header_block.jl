@@ -23,8 +23,8 @@ function build_hmdif_header_block(survey_name::String)
                     line7,
                     line8)
 
-    survey_record = "SURVEY\\CVI,235,5,$survey_name,,,;\n"
-    push!(HMDIF_out,survey_record)
+    #survey_record = "SURVEY\\CVI,235,5,$survey_name,,,;\n"
+    #push!(HMDIF_out,survey_record)
 
     return HMDIF_out
 

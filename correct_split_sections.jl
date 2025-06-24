@@ -27,7 +27,7 @@ function correct_split_sections(survey_records_df)
 
     second_filter_df = filtered_df[filtered_df.SECTION_LE .!= filtered_df.EndCh, :]
 
-    gdf = groupby(second_filter_df, :SectionID)
+    gdf = DataFrames.groupby(second_filter_df, :SectionID)
 
     #println(gdf)
 

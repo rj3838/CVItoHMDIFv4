@@ -27,7 +27,7 @@ function find_value_clusters(
     target_value:: Any;
     connectivity::Symbol = :queen,)
 
-    println("find_value_clusters target value ", target_value)
+    #println("find_value_clusters target value ", target_value)
 
     # remove the sectionNr or the clusters will incluce the sectionNr !
     select!(input_df, Not(:SectionID))
@@ -49,7 +49,7 @@ function find_value_clusters(
             end
         end
     end
-    println("leaving find_value_clusters ", coordinates)
+    #println("leaving find_value_clusters ", coordinates)
     # Handle the case where the target value is not found.
     if isempty(coordinates)
         return []
@@ -114,13 +114,13 @@ function find_value_clusters(
         end
         push!(clusters, cluster)
     end
-    println("clusters ",clusters)
+    #println("clusters ",clusters)
     return clusters
 end
 
-function fn_cluster_ident(input_df::DataFrame, target_value::Int8)
+#function fn_cluster_ident(input_df::DataFrame, target_value::Int8)
 
-    println("fn_cluster_ident")
+    #println("fn_cluster_ident")
     # Example DataFrame
     # df = DataFrame(
     #     A = [1, 7, 3, 4, 7, 7],
@@ -177,6 +177,6 @@ function fn_cluster_ident(input_df::DataFrame, target_value::Int8)
     #         println(coord)
     #     end
     # end
-end #function end
+#end #function end
 
 #end #module end

@@ -1,4 +1,6 @@
-function process_observ_records(section_df::DataFrame, frame_number::Int)
+using DataFrames
+
+function process_observ_records(section_df::DataFrame, observation_number::Int16)
     # this is used to return the records
     hmd_return_records = []
     observ_defect_record = ""
@@ -9,13 +11,14 @@ function process_observ_records(section_df::DataFrame, frame_number::Int)
     section_end_chainage = section_df.EndCh[1]
     
     # start the observation counter for this section
-    observation_number = 0
+    #observation_number = 0
     # this is used to check if any defects are present in the section
     defect_present = false
     # read the defect code list
 
     defect_code_list = CSV.read("CVI_Defect_code_info.csv", DataFrame; delim=',', header=true, normalizenames=true)
-    #defect_list_length = size(defect_code_list,1)
+    
+    println("defect_list size ",size(defect_code_list,1))
 
     for row in eachrow(defect_code_list)
 
@@ -38,9 +41,9 @@ function process_observ_records(section_df::DataFrame, frame_number::Int)
 
         # convert the grouped DF to a standard DF
         conv_section_df = DataFrame(section_df)
-        println("cvi_code ", cvi_code)
+        #println("cvi_code ", cvi_code)
         returned_clusters = find_value_clusters(conv_section_df, cvi_code)
-        println("returned_clusters ", returned_clusters)
+        #println("returned_clusters ", returned_clusters)
         #println(names(conv_section_df))
         returned_rows = find_rows_with_value(conv_section_df, cvi_code)
         
@@ -49,7 +52,11 @@ function process_observ_records(section_df::DataFrame, frame_number::Int)
         
         if !isempty(returned_clusters)
 
-            #global observation_number += 1
+            println("cvi_code ", cvi_code)
+
+            println("returned_clusters ", returned_clusters)
+
+            #observation_number += 1
 
             if calculation == "Length"
                 defect_value = fn_length_calc(conv_section_df, returned_clusters, returned_rows)
@@ -75,8 +82,8 @@ function process_observ_records(section_df::DataFrame, frame_number::Int)
 
         end
 
-        println("Defect check")
-        println(typeof(defect_value), " ", defect_value)
+        #println("Defect check")
+        #println(typeof(defect_value), " ", defect_value)
 
         # when the defect value is not a number don't bother processing it so set it to zero
 
@@ -88,7 +95,7 @@ function process_observ_records(section_df::DataFrame, frame_number::Int)
         
         check_value ::Int64 = lower_limit
 
-        println("check_value ", check_value, " defect_value ", defect_value)
+        #println("check_value ", check_value, " defect_value ", defect_value)
 
         # for some defects the defect value must exceed a metre.
 
@@ -96,12 +103,12 @@ function process_observ_records(section_df::DataFrame, frame_number::Int)
 
             observation_number += 1
             defect_present = true
-            observ_defect_record = string("OBSERV\\",frame_number,",",defect_code,",235,,",section_start_chainage,",",section_end_chainage,";\n")
+            observ_defect_record = string("OBSERV\\",observation_number,",",defect_code,",235,,",section_start_chainage,",",section_end_chainage,";\n")
             #obval_defect_record = string("OBVAL\\1,1,",round(defect_value, digits=2),",",obval_code,",,;\n")
             #observ_defect_record = string("OBSERV\\",frame_number,",",defect_code,",235,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
             obval_defect_record = string("OBVAL\\1,1,",round(defect_value, digits=2),",",obval_code,",,;\n")
-            println("observ_defect_record ",observ_defect_record)
-            println("obval_defect_record ",obval_defect_record)
+            #println("observ_defect_record ",observ_defect_record)
+            #println("obval_defect_record ",obval_defect_record)
         # else
         #     println("Defect value ", defect_value, " is less than the lower limit ", lower_limit, " or no defect so not recorded")
         #     observ_defect_record = string("OBSERV\\",observation_number,",BNAS,235,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
@@ -122,12 +129,12 @@ function process_observ_records(section_df::DataFrame, frame_number::Int)
         #     push!(hmd_return_records,string(obval_defect_record)) 
         end
     
-
+    end
     # when defect is not found the section is still recorded but with a BUTS code
     if !defect_present
         observation_number += 1
         #observ_defect_record = string("OBSERV\\",frame_number,",BUTS,235,",minimum(section_df.Chainage),",",maximum(section_df.Chainage),";\n")
-        observ_defect_record = string("OBSERV\\",frame_number,",BUTS,235,,",section_start_chainage,",",section_end_chainage,";\n")
+        observ_defect_record = string("OBSERV\\",observation_number,",BUTS,235,,",section_start_chainage,",",section_end_chainage,";\n")
         obval_defect_record = string("OBVAL\\1,1,0,P,,;\n")
         push!(hmd_return_records,string(observ_defect_record))
         push!(hmd_return_records,string(obval_defect_record))
@@ -137,10 +144,9 @@ function process_observ_records(section_df::DataFrame, frame_number::Int)
     
     hmd_return = [(String(item)) for item in hmd_return_strings] 
 
-    return hmd_return
+    return hmd_return, observation_number
     
     #println(section_df)
     
     end # <-- Add this to close the for loop
 
-end

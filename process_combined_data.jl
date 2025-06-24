@@ -12,7 +12,7 @@ using CSV, DataFrames
 function process_combined_data(combined_df::DataFrame, survey_ID::String)
 
     # Group by Network
-    grouped_df = groupby(combined_df, :Network)
+    grouped_df = DataFrames.groupby(combined_df, :Network)
 
     for survey_gdf in grouped_df
         # Initialize the output Vector for survey records
@@ -76,7 +76,7 @@ function process_combined_data(combined_df::DataFrame, survey_ID::String)
     survey_df = DataFrame(combined_df)
 
     #section_gdf = groupby(survey_gdf, [:SectionID, :Chainage])
-    section_gdf = groupby(survey_df, :SectionID)
+    section_gdf = DataFrames.groupby(survey_df, :SectionID)
     #section_number = 0
     for (section_number, section_frame) in enumerate(section_gdf)
         # the only data needed fron the survey level is the network name/number
@@ -87,8 +87,8 @@ function process_combined_data(combined_df::DataFrame, survey_ID::String)
         # Create a section record for each network
         println("scetion_nunmber : ", section_number)
         section_records = process_section_records(section_df, network, section_number)
-        println("Section records: ", section_records)
-        println(typeof(section_records))
+        #println("Section records: ", section_records)
+        #println(typeof(section_records))
         
         for record in section_records
             # println("Adding section record: ", record)
@@ -98,6 +98,25 @@ function process_combined_data(combined_df::DataFrame, survey_ID::String)
         end
         #push!(survey_records, section_records)
     end
+
+    filter!(!isempty, survey_records)
+
+    hmdif_count = size(survey_records)[1]
+    #println("process test ", lastindex(survey_records))
+
+    #println("hmdif_count = ", hmdif_count)
+
+    # hmd_records = vcat(hmd_records)
+    #hmd_single_vector = Iterators.flatten(survey_records)
+
+    #hmd_collected = collect(hmd_single_vector)
+
+    #hmdif_count = size(hmd_collected)[1]
+    #println("hmdif_count after flatten = ", hmdif_count)
+    #filter!(!isempty, hmd_collected)
+    #println("process test count pcd ", lastindex(hmd_collected))
+
+    #hmdif_count = lastindex(hmd_collected)
 
     return survey_records
     end
