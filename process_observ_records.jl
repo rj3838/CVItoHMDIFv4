@@ -18,7 +18,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
 
     defect_code_list = CSV.read("CVI_Defect_code_info.csv", DataFrame; delim=',', header=true, normalizenames=true)
     
-    println("defect_list size ",size(defect_code_list,1))
+    #println("defect_list size ",size(defect_code_list,1))
 
     for row in eachrow(defect_code_list)
 
@@ -28,7 +28,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
         calculation = row[4]
         lower_limit = row[5]
         
-        println(cvi_code, " ", defect_code, " ", survey_direction, " ", calculation, " ", lower_limit)
+        #println(cvi_code, " ", defect_code, " ", survey_direction, " ", calculation, " ", lower_limit)
     
     #observ and obval templates are :
     #OBSERV\\NUMBER,DEFECT,VERSION,XSECT,SCHAIN,ECHAIN;"
@@ -55,6 +55,11 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
             println("cvi_code ", cvi_code)
 
             println("returned_clusters ", returned_clusters)
+
+            #break the returned clusters vector into the seperate clusters when there is more than one and 
+            #process them seperately
+
+            
 
             #observation_number += 1
 
