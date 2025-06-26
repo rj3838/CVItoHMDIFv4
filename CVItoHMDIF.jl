@@ -29,7 +29,7 @@ include("correct_split_sections.jl")
 include("merge_split_section.jl")
 include("process_observ_records.jl")
 include("hmd_tail_records.jl")
-
+include("fn_lateral_calc.jl")
 
 function fn_gdf_iterate(gdf_passed)
 

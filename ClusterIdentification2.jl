@@ -30,7 +30,9 @@ function find_value_clusters(
     #println("find_value_clusters target value ", target_value)
 
     # remove the sectionNr or the clusters will incluce the sectionNr !
-    select!(input_df, Not(:SectionID))
+    select!(input_df, Not([:SectionID, :Chainage, :Direction, :StartCh, :EndCh, :Length, :SECTION_LE, :Network]))
+
+    #println("cluster cols: ", names(input_df))
 
     # Check for valid connectivity type.
     # if connectivity != :rook && connectivity != :queen
