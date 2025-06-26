@@ -80,6 +80,7 @@ function process_combined_data(combined_df::DataFrame, survey_ID::String)
     #section_number = 0
     for (section_number, section_frame) in enumerate(section_gdf)
         # the only data needed fron the survey level is the network name/number
+        println(section_frame[1, :])
         network = section_frame.Network[1]  # Get the network name from the first row of the group
         #section_number += 1
 

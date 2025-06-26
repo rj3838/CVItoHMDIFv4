@@ -50,6 +50,8 @@ function build_main_df(grid_df, route_df, section_df)
 
     # check the result_rows column names
     #println("Result Rows Column Names: ", names(result_rows))
+    CSV.write("temp_rows.csv", result_rows, delim=',', header=true, writeheader=true,
+                append=false, quotechar='"', stringtype=string)
 
     # drop the section ID column
     select!(result_rows, Not(:Section_ID))
@@ -64,9 +66,10 @@ function build_main_df(grid_df, route_df, section_df)
     # change the section column names to match result_row names
     rename!(section_df, :Section_ID => :SectionID)
 
-    # need to rename the authority name titled column to NETWORK
+    # need to rename the authority name titled column (num 13) to Network
     old_name = names(section_df)[13]
-    rename!(section_df, Symbol(old_name) => :Network)
+    new_name = :Network
+    rename!(section_df, old_name => new_name)
 
     # Ensure the section_df has the correct column names
     #println("Section DataFrame Column Names: ", names(section_df))

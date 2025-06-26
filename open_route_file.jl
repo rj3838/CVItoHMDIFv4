@@ -13,7 +13,8 @@ function open_route_file(route_file::String)
             header=true, 
             missingstring="",
             #stringtype=String,
-            normalizenames=true)
+            normalizenames=true,
+            types=Dict(:Direction => String))
             #dateparse=true,
             #allowmissing=true)
             #skipto=1)  # Skip the first line if it contains metadata or comments
@@ -22,4 +23,5 @@ function open_route_file(route_file::String)
     catch e
         error("Failed to read route file: $(e)")
     end
+    
 end

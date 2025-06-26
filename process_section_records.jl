@@ -26,7 +26,7 @@ function process_section_records(section_frame, network, section_number)
     survey_string = survey_record * "\n"  # Append a newline character to the end of the record
 
     # Append the survey record to the section records
-         
+    #println("section push")     
     push!(survey_records, survey_string)
 
     # so the observ and obval lines are processed for each section they need to be
