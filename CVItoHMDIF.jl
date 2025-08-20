@@ -266,13 +266,13 @@ function fn_build_hmdif(grid_data, survey_name, route_data)
 
     #println(dend_count)
     #DEND_string = raw"DEND\\" + string(dend_value) + raw";"
-    DEND_string = "DEND\\$dend_count;\n"
+    DEND_string = "DEND\\($dend_count);\n"
     push!(HMDIF_out, DEND_string)
     #println(HMDIF_out)
     # HMEND is the length of HMDIF_out plus 1 (needs to include the HMEND record)
     
     HMDIF_count = size(HMDIF_out)[1] + 1
-    HMEND_string = "HMEND\\$HMDIF_count;"
+    HMEND_string = "HMEND\\($HMDIF_count);"
     push!(HMDIF_out, HMEND_string)
     return HMDIF_out
 end
@@ -290,8 +290,8 @@ function main()
 #file = open(grid_file_name, "r")
 #file = open("Zone1_Route1.grd", "r")
 
-    grid_file_name = "AdHoc-Rickney.grd"
-    #grid_file_name = "Test Grid 3.grd"
+    #grid_file_name = "AdHoc-Rickney.grd"
+    grid_file_name = "AdHoc-Meres.grd"
 
     # create the survey name and survey file name and read the grid
 

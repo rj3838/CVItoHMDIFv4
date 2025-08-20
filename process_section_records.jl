@@ -1,20 +1,30 @@
-function process_section_records(section_frame, network, section_number)
+using Dates
+
+function process_section_records(section_frame, network, section_number, survey_string)
+
+    # extract the date and start time from the survey_ID
+    survey_date = Dates.format(Date(split(survey_string, "_")[1], "yyyy-mm-dd"), "ddmmyyyy")
+
+    time_part_string = split(survey_string, "_")[2]
+    time_object = Time(time_part_string, "HHMM")
+    survey_time = Dates.format(time_object, "HH:MM")
 
     # the survey record format is
         
     # SECTION\\NETWORK,NUMBER,LABEL,NORMDIR,SURVDIR,MASTER,LENGTH,COMMENT,SDATE,EDATE,STIME,ETIME,INSP;\n"
     survey_records = String[]
+    println("section FRAME ", section_frame[1,:])
     
     #network_ID = network
     section_label = section_frame.SectionID[1]
     section_normdir = "F"
     section_survdir = section_frame.Direction[1]
-    section_master = ""
+    section_master = "M"
     section_length = string(section_frame.SECTION_LE[1])
     section_comment = ""
-    section_sdate = ""
-    section_edate = ""
-    section_stime = ""
+    section_sdate = survey_date
+    section_edate = survey_date
+    section_stime = survey_time
     section_etime = ""
     section_insp = "TRL"
     #println("network: ", network, " section_number: ", section_number,"section_label: ", section_label)

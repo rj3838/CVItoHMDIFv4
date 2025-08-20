@@ -28,9 +28,9 @@ function hmd_tail_records(hmd_records)
 
     hmd_tail = Vector{String}()
     
-    push!(hmd_tail, "DEND $data_count;\n")
+    push!(hmd_tail, "DEND\\$data_count;\n")
 
-    push!(hmd_tail, "HMEND $hmdif_count;")
+    push!(hmd_tail, "HMEND\\$hmdif_count;")
 
     #println(hmd_tail)
     

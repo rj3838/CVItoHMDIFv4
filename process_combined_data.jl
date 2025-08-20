@@ -87,7 +87,7 @@ function process_combined_data(combined_df::DataFrame, survey_ID::String)
         section_df = DataFrame(section_frame)
         # Create a section record for each network
         println("scetion_nunmber : ", section_number)
-        section_records = process_section_records(section_df, network, section_number)
+        section_records = process_section_records(section_df, network, section_number, survey_name)
         #println("Section records: ", section_records)
         #println(typeof(section_records))
         
