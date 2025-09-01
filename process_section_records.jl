@@ -8,6 +8,7 @@ function process_section_records(section_frame, network, section_number, survey_
     time_part_string = split(survey_string, "_")[2]
     time_object = Time(time_part_string, "HHMM")
     survey_time = Dates.format(time_object, "HH:MM")
+    survey_end = Dates.format(time_object + Minute(5), "HH:MM")
 
     # the survey record format is
         
@@ -25,7 +26,7 @@ function process_section_records(section_frame, network, section_number, survey_
     section_sdate = survey_date
     section_edate = survey_date
     section_stime = survey_time
-    section_etime = ""
+    section_etime = survey_end
     section_insp = "TRL"
     #println("network: ", network, " section_number: ", section_number,"section_label: ", section_label)
     # Create the survey record
