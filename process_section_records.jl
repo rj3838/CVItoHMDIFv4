@@ -1,7 +1,7 @@
 using Dates
 
 function process_section_records(section_frame, network, section_number, survey_string)
-
+    println("starting process_section_records for section: ", section_frame.SectionID[1])
     # extract the date and start time from the survey_ID
     survey_date = Dates.format(Date(split(survey_string, "_")[1], "yyyy-mm-dd"), "ddmmyyyy")
 
@@ -14,7 +14,7 @@ function process_section_records(section_frame, network, section_number, survey_
         
     # SECTION\\NETWORK,NUMBER,LABEL,NORMDIR,SURVDIR,MASTER,LENGTH,COMMENT,SDATE,EDATE,STIME,ETIME,INSP;\n"
     survey_records = String[]
-    println("section FRAME ", section_frame[1,:])
+    #println("section FRAME ", section_frame[1,:])
     
     #network_ID = network
     section_label = section_frame.SectionID[1]
@@ -68,5 +68,6 @@ function process_section_records(section_frame, network, section_number, survey_
         # append the records to the survey records
         append!(survey_records, hmd_records)
     end
+    println("ending process_section_records for section: ", section_frame.SectionID[1])
     return survey_records
 end

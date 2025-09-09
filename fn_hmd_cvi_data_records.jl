@@ -20,7 +20,7 @@ function fn_hmd_cvi_data_records(grid_data)
 
     # Section Id and sectionNr can now be used to create a grouped data frame.
 
-    gdf_grid_data = groupby(grid_data, :SectionID, :StartCh)
+    gdf_grid_data = groupby(grid_data, [:SectionID, :StartCh])
 
     # now for each grouped DF create records for section + observ + obval 
 

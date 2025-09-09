@@ -17,10 +17,11 @@ function open_section_file(section_file::String)
             #dateparse=true,
             #allowmissing=true)
             #skipto=1)  # Skip the first line if it contains metadata or comments
-        println(section_data[1,:])
+        #println(section_data[1,:])
         return section_data
     catch e
-        error("Failed to read route file: $(e)")
+        println(error("Failed to read route file: $(e)"))
+        return nothing
     end
     # current_col_name = names(section_data)[13]
     # new_col_name = :Network

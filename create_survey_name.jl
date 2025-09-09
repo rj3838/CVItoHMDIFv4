@@ -8,13 +8,13 @@ function create_survey_name(grid_file_name)
     close(grid_file)
 
     # Print the first line
-    println(first_line)
+    #println(first_line)
 
     #Use the string after the word 'file' as the survey name
 
     survey_name = split(first_line, r"^.+file ")[:2]
 
-    print("survey_name", survey_name)
+    #print("survey_name", survey_name)
 
     # replace the spaces with an underscore
     survey_name = string(replace(survey_name, " " => "_"))
@@ -22,8 +22,8 @@ function create_survey_name(grid_file_name)
     survey_hmd_file = string(survey_name, ".HMD")
     #survey_output_file = string(replace(survey_name, " " => "_") * ".HMD")
 
-    println("survey name is ",survey_name)
-    println("output file is ", survey_hmd_file)
+    #println("survey name is ",survey_name)
+    #println("output file is ", survey_hmd_file)
 
     return survey_hmd_file, survey_name
 

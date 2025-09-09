@@ -19,7 +19,10 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
     defect_present = false
     # read the defect code list
 
-    defect_code_list = CSV.read("CVI_Defect_code_info.csv", DataFrame; delim=',', header=true, normalizenames=true)
+    defect_code_list = CSV.read("CVI_Defect_code_info.csv", 
+                                DataFrame; delim=',', 
+                                header=true, 
+                                normalizenames=true)
     
     #println("defect_list size ",size(defect_code_list,1)
 
@@ -32,7 +35,10 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
         survey_direction = row[3]
         calculation = row[4]
         lower_limit = row[5]
-        
+
+        # convert the survey direction cross section code which is reported in the observ_defect_record
+        xsp_dict = Dict("F" => "CL1", "R" => "CR1", "B" => "Both", "N/A" => "N")
+
         #println(cvi_code, " ", defect_code, " ", survey_direction, " ", calculation, " ", lower_limit)
 
         # the observ record is the same for all value clusters found in a section (but only push it at the end !)
@@ -55,9 +61,11 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
 
         if !isempty(returned_clusters)
 
+            obval_indicator = true
+
             #println("returned_clusters with something in ?", returned_clusters)
 
-            println("cvi_code ", cvi_code)
+            #println("cvi_code: ", cvi_code, )
             #observ_defect_record = string("OBSERV\\",observation_number,",",defect_code,",235,,",section_start_chainage,",",section_end_chainage,";\n")
 
             #println("returned_clusters ", returned_clusters)
@@ -100,7 +108,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
                     check_defect_value = 0
                 end
                 
-                check_value ::Int64 = lower_limit
+                #check_value ::Int64 = lower_limit
 
                 #observation_number += 1
                 
@@ -120,8 +128,11 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
             if obval_indicator == true
 
                 observation_number += 1
-                    # there is a defect in the subsection so push the OBSERV record
-                observ_defect_record = string("OBSERV\\",observation_number,",",defect_code,",235,,",section_start_chainage,",",section_end_chainage,";\n")
+                #get the xsp_code from the dictionary
+                xsp_code = xsp_dict[survey_direction]
+
+                # there is a defect in the subsection so push the OBSERV record
+                observ_defect_record = string("OBSERV\\",observation_number,",",defect_code,",235,", xsp_code,",",section_start_chainage,",",section_end_chainage,";\n")
                 push!(hmd_return_records,string(observ_defect_record))
 
                 if calculation != "Count"
@@ -145,58 +156,22 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
                     #push!(hmd_return_records,string(obval_defect_record))
                     obval_record = true
                 end
-            #else #end
-            #if obval_indicator == false
-            #println("returned_clusters ", returned_clusters)  
-                # observation_number += 1
-                # #observ_defect_record = string("OBSERV\\",frame_number,",BUTS,235,",minimum(section_df.Chainage),",",maximum(section_df.Chainage),";\n")
-                # observ_defect_record = string("OBSERV\\",observation_number,",BUTS,235,,",section_start_chainage,",",section_end_chainage,";\n")
-                # obval_defect_record = string("OBVAL\\1,1,100,P,,;\n")
-                # push!(hmd_return_records,string(observ_defect_record))
-                # push!(hmd_return_records,string(obval_defect_record))
-
-                # observ_defect_record = ""
-                # obval_defect_record = ""
-                # obval_indicator = false
-            # else
-            #     # when defect is not found the section is still recorded but with a BUTS code
-            #     observation_number += 1
-            #     #observ_defect_record = string("OBSERV\\",frame_number,",BUTS,235,",minimum(section_df.Chainage),",",maximum(section_df.Chainage),";\n")
-            #     observ_defect_record = string("OBSERV\\",observation_number,",BUTS,235,,",section_start_chainage,",",section_end_chainage,";\n")
-            #     obval_defect_record = string("OBVAL\\1,1,100,P,,;\n")
-            #     push!(hmd_return_records,string(observ_defect_record))
-            #     push!(hmd_return_records,string(obval_defect_record))
-
-            #     observ_defect_record = ""
-            #     obval_defect_record = ""
-            #     obval_indicator = false
             end
-        end
-
-        if obval_indicator == false
-            
-                # when defect is not found the section is still recorded but with a BUTS code
+        end    
+        if obval_indicator == false #|| !defect_present
             observation_number += 1
-                #observ_defect_record = string("OBSERV\\",frame_number,",BUTS,235,",minimum(section_df.Chainage),",",maximum(section_df.Chainage),";\n")
-            observ_defect_record = string("OBSERV\\",observation_number,",BUTS,235,,",section_start_chainage,",",section_end_chainage,";\n")
-            obval_defect_record = string("OBVAL\\1,1,100,P,,;\n")
-            push!(hmd_return_records,string(observ_defect_record))
-            push!(hmd_return_records,string(obval_defect_record))
-
+            # get the xsp_code from the dictionary for both directions
+            for xsp_code in ["CL1", "CR1"]
+                observ_defect_record = string("OBSERV\\", observation_number, ",BUTS,235,", xsp_code, ",", section_start_chainage, ",", section_end_chainage, ";\n")
+                obval_defect_record = string("OBVAL\\1,1,0,P,,;\n")
+                push!(hmd_return_records, observ_defect_record)
+                push!(hmd_return_records, obval_defect_record)
+            end
             observ_defect_record = ""
             obval_defect_record = ""
             obval_indicator = false
         end
-    # when defect is not found the section is still recorded but with a BUTS code
-    # if obval_indicator == false
-    #     observation_number += 1
-    # #     #observ_defect_record = string("OBSERV\\",frame_number,",BUTS,235,",minimum(section_df.Chainage),",",maximum(section_df.Chainage),";\n")
-    #  observ_defect_record = string("OBSERV\\",observation_number,",BUTS,235,,",section_start_chainage,",",section_end_chainage,";\n")
-    #     obval_defect_record = string("OBVAL\\1,1,100,P,,;\n")
-    #     push!(hmd_return_records,string(observ_defect_record))
-    #     push!(hmd_return_records,string(obval_defect_record))
-    # end
-    end # <-- Add this to close the for loop
+    end # <-- close the for loop
 
     hmd_return_strings = [String(item) for item in hmd_return_records]
     

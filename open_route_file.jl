@@ -21,7 +21,7 @@ function open_route_file(route_file::String)
         
         return route_data
     catch e
-        error("Failed to read route file: $(e)")
+        println(error("Failed to read route file: $(e)"))
     end
-    
+    return nothing
 end
