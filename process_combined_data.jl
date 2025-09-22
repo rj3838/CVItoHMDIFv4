@@ -10,7 +10,7 @@
 using CSV, DataFrames
 
 function process_combined_data(combined_df::DataFrame, survey_ID::String)
-
+    println("Processing combined data for survey ID: $survey_ID")
     # Group by Network
     grouped_df = DataFrames.groupby(combined_df, :Network)
 
@@ -42,67 +42,54 @@ function process_combined_data(combined_df::DataFrame, survey_ID::String)
         #println("Creating survey record: ", survey_record)
         push!(survey_records, survey_record)
 
-    # Loop through each group to create survey records
+        # Loop through each group to create survey records
 
-    CSV.write("survey_records.csv", survey_gdf, header=true)
+        CSV.write("survey_records.csv", survey_gdf, header=true)
 
-    corrected_survey_df = correct_split_sections(survey_gdf)
+        #corrected_survey_df = correct_split_sections(survey_gdf)
 
     # for row in eachrow(corrected_survey_df)
     # idx = row.original_row  
     # survey_gdf[idx, :] = row[Not(:original_row)]
     # end
 
-    survey_df = DataFrame(survey_gdf)
+        survey_df = DataFrame(survey_gdf)
 
     # Merge the original survey DataFrame with the corrected one. 
     #This updates the start + end chainage and the length of the subsection.
 
-    df_merged = merge_split_sections(survey_df, corrected_survey_df)
-
-    # # For each column in dataframeB (except the join keys), update dataframeA
-    # for col in names(corrected_survey_df)
-    #     if col ∉ [:SectionID, :Chainage]
-    #         # If the column exists in dataframeA, update it
-    #         if col in names(survey_df)
-    #             # Use the value from B if present, otherwise keep A's value
-    #             survey_df[!, col] = coalesce.(df_merged[!, Symbol(col*"_b")], df_merged[!, Symbol(col*"_a")])
-    #         end
-    #     end
-    # end
+    #df_merged = merge_split_sections(survey_df, corrected_survey_df)
 
     #CSV.write("new_survey_records.csv", df_merged, header=true)
 
-    survey_df = DataFrame(combined_df)
+        survey_df = DataFrame(combined_df)
 
     #section_gdf = groupby(survey_gdf, [:SectionID, :Chainage])
-    section_gdf = DataFrames.groupby(survey_df, :SectionID)
+        section_gdf = DataFrames.groupby(survey_df, :SectionID)
     #section_number = 0
-    for (section_number, section_frame) in enumerate(section_gdf)
-        # the only data needed fron the survey level is the network name/number
-        println(section_frame[1, :])
-        network = section_frame.Network[1]  # Get the network name from the first row of the group
-        #section_number += 1
+        for (section_number, section_frame) in enumerate(section_gdf)
+            # the only data needed fron the survey level is the network name/number
+            network = section_frame.Network[1]  # Get the network name from the first row of the group
 
-        section_df = DataFrame(section_frame)
-        # Create a section record for each network
-        println("scetion_nunmber : ", section_number)
-        section_records = process_section_records(section_df, network, section_number, survey_name)
-        #println("Section records: ", section_records)
-        #println(typeof(section_records))
-        
-        for record in section_records
-            # println("Adding section record: ", record)
-            # convert to string and append a newline
-            record = string(record)
-            push!(survey_records, record)
+            section_df = DataFrame(section_frame)
+            # Create a section record for each network
+            #println("scetion_nunmber : ", section_number)
+            section_records = process_section_records(section_df, network, section_number, survey_name)
+            #println("Section records: ", section_records)
+            #println(typeof(section_records))
+            
+            for record in section_records
+                # println("Adding section record: ", record)
+                # convert to string and append a newline
+                record = string(record)
+                push!(survey_records, record)
+            #push!(survey_records, section_records)
+            end
         end
-        #push!(survey_records, section_records)
-    end
 
     filter!(!isempty, survey_records)
 
-    hmdif_count = size(survey_records)[1]
+    #hmdif_count = size(survey_records)[1]
     #println("process test ", lastindex(survey_records))
 
     #println("hmdif_count = ", hmdif_count)
@@ -118,8 +105,8 @@ function process_combined_data(combined_df::DataFrame, survey_ID::String)
     #println("process test count pcd ", lastindex(hmd_collected))
 
     #hmdif_count = lastindex(hmd_collected)
-
+    println("finished processing survey ID: $survey_ID with ", length(survey_records), " records")
     return survey_records
     end
-
 end
+#return hmd_collected

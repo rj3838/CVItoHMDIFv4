@@ -1,6 +1,7 @@
 using DataFrames
 
 function process_observ_records(section_df::DataFrame, observation_number::Int16)
+    #println("starting process obsvervation records for section: ", section_df.SectionID[1])
     # this is used to return the records
     hmd_return_records = []
     observ_defect_record = ""
@@ -17,6 +18,10 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
 
     #println("section names: ",names(section_df))
     #println(typeof(section_df))
+
+    # this list is used to track which directions have been processed in the section_df so we can create BUTS records if needed
+    # for directions without defects 
+    direction_list = ["CL1", "CR1"]
 
     # check to see if the section_df contains only zeros in the defect columns
     # if it does then we can skip processing this section_df
@@ -35,24 +40,24 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
         catch
             # If parsing fails, the column likely contains non-numeric data.
             # You may want to skip it or handle it differently.
-            println("Could not convert column '$c' to numeric.")
+            #println("Could not convert column '$c' to numeric.")
         end
     end
 
-    if all(x -> x == 0, Iterators.flatten(eachcol(defect_df))) # if every element in every column is zero !
+    # if all(x -> x == 0, Iterators.flatten(eachcol(defect_df))) # if every element in every column is zero !
 
-        println("No defects found in this subsection from ", section_start_chainage, " to ", section_end_chainage)
-        # if there are no defects in the subsection then we need to push a BUTS record with zero values
-        #observation_number += 1
-        for xsp_code in ["CL1", "CR1"]
-            observation_number += 1
-            observ_defect_record = string("OBSERV\\", observation_number, ",BUTS,235,", xsp_code, ",", section_start_chainage, ",", section_end_chainage, ";\n")
-            obval_defect_record = string("OBVAL\\1,1,0,P,,;\n")
-            push!(hmd_return_records, observ_defect_record)
-            push!(hmd_return_records, obval_defect_record)
-        end
-        return hmd_return_records, observation_number
-    end
+    #     println("No defects found in this subsection from ", section_start_chainage, " to ", section_end_chainage)
+    #     # if there are no defects in the subsection then we need to push a BUTS record for both directions with zero values
+    #     #observation_number += 1
+    #     for xsp_code in ["CL1", "CR1"]
+    #         observation_number += 1
+    #         observ_defect_record = string("OBSERV\\", observation_number, ",BUTS,235,", xsp_code, ",", section_start_chainage, ",", section_end_chainage, ";\n")
+    #         obval_defect_record = string("OBVAL\\1,1,0,P,,;\n")
+    #         push!(hmd_return_records, observ_defect_record)
+    #         push!(hmd_return_records, obval_defect_record)
+    #     end
+    #     return hmd_return_records, observation_number
+    # end
     
     # this is used to check if any defects are present in the section
     defect_present = false
@@ -69,12 +74,10 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
         defect_code = row[2]
         survey_direction = row[3]
         calculation = row[4]
-        lower_limit = row[5]
+        lower_limit = row[5]  
 
         # convert the survey direction cross section code which is reported in the observ_defect_record
         xsp_dict = Dict("F" => "CL1", "R" => "CR1", "B" => "Both", "N/A" => "N")
-
-        #println(cvi_code, " ", defect_code, " ", survey_direction, " ", calculation, " ", lower_limit)
 
         # convert the grouped DF to a standard DF
         conv_section_df = DataFrame(section_df)
@@ -91,7 +94,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
         #println("typeof returned_clusters :", typeof(returned_clusters))
         #println("returned_clusters :", returned_clusters)
 
-        if !isempty(returned_clusters) # when there are returned clusters
+        if !isempty(returned_clusters) # when there are returned clusters there is a defect to process
 
             obval_indicator = true
             
@@ -132,7 +135,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
                     check_defect_value = 0
                 end
                 
-                check_value ::Int64 = lower_limit
+                #check_value ::Int64 = lower_limit
 
                 #observation_number += 1
                 
@@ -160,7 +163,13 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
                 # there is no defect in the subsection so push the OBSERV record
                 observ_defect_record = string("OBSERV\\",observation_number,",",defect_code,",235,", xsp_code,",",section_start_chainage,",",section_end_chainage,";\n")
                 push!(hmd_return_records, string(observ_defect_record))
-                println("pushing observ record ", observ_defect_record)
+
+                # recording the xsp_code so the BUTS records can be created if there are no defects in a direction.
+                # Remove all occurrences of xsp_code from the list
+                println("direction list ", direction_list, " removing ", xsp_code)
+                filter!(x -> x != xsp_code, direction_list)
+                println("direction list ", direction_list)
+                #println("pushing observ record ", observ_defect_record)
                 #println("pushing observ record ", observ_defect_record)
                 if calculation != "Count"
 
@@ -182,41 +191,74 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
 
                     #push!(hmd_return_records,string(obval_defect_record))
                     obval_record = true
-                end
+                end # calculation != "Count"
+            end # defect_present
+
+            # if there are any directions left in the direction_list then these are directions without defects
+            # so a BUTS record is needed for each direction
+
+            # if !isempty(direction_list)
+            #     println("directions without defects ", direction_list)
+            #         # if there are directions without defects then we need to push a BUTS record for each direction
+            #     for direction_code in direction_list
+            #         observation_number += 1
+            #         observ_defect_record = string("OBSERV\\", observation_number, ",BUTS,235,", direction_code, ",", section_start_chainage, ",", section_end_chainage, ";\n")
+            #         obval_defect_record = string("OBVAL\\1,1,0,P,,;\n")
+            #         push!(hmd_return_records, observ_defect_record)
+            #         push!(hmd_return_records, obval_defect_record)
+            #     end
+            #         observ_defect_record = ""
+            #         obval_defect_record = ""
+            #         obval_indicator = false
+            # end #isempty direction_list
+        end # there were returned clusters to process
+
+        # if there are any directions left in the direction_list then these are directions without defects
+        # so a BUTS record is needed for each direction
+
+        if !isempty(direction_list)
+            println("directions without defects ", direction_list)
+                # if there are directions without defects then we need to push a BUTS record for each direction
+                # there should never be two directions without defects as that would have been caught by the
+                # all zero defect check at the start of the function
+
+            for direction_code in direction_list
+                observation_number += 1
+                observ_defect_record = string("OBSERV\\", observation_number, ",BUTS,235,", direction_code, ",", section_start_chainage, ",", section_end_chainage, ";\n")
+                obval_defect_record = string("OBVAL\\1,1,0,P,,;\n")
+                push!(hmd_return_records, observ_defect_record)
+                push!(hmd_return_records, obval_defect_record)
+                println("direction list ", direction_list, " removing ", direction_code)
+                filter!(x -> x != direction_code, direction_list)
+                println("direction list ", direction_list)
+                continue
             end
+
+            observ_defect_record = ""
+            obval_defect_record = ""
+            obval_indicator = false
+        end #isempty direction_list
+    end # <-- close the for defect row loop
+
+    # if there are any directions left in the direction_list then these are directions without defects
+    # then we need to push a BUTS record for each direction. There should never be two directions without 
+    # defects as that would have been caught by the all zero defect check at the start of the function
+
+    println("directions without defects ", direction_list)
+
+    if !isempty(direction_list)
+        
+        for direction_code in direction_list
+            observation_number += 1
+            observ_defect_record = string("OBSERV\\", observation_number, ",BUTS,235,", direction_code, ",", section_start_chainage, ",", section_end_chainage, ";\n")
+            obval_defect_record = string("OBVAL\\1,1,0,P,,;\n")
+            push!(hmd_return_records, observ_defect_record)
+            push!(hmd_return_records, obval_defect_record)
         end
-        # if there are no obval records for this defect code then we need to push an OBSERV buts record
-        #if obval_record == false
-        #    println("No defects found for code ", cvi_code)
-        #    defect_count += 1
-        #     observation_number += 1
-        #     # get the xsp_code from the dictionary for both directions
-        #     for xsp_code in ["CL1", "CR1"]
-        #         observation_number += 1
-        #         observ_defect_record = string("OBSERV\\", observation_number, ",BUTS,235,", xsp_code, ",", section_start_chainage, ",", section_end_chainage, ";\n")
-        #         obval_defect_record = string("OBVAL\\1,1,0,P,,;\n")
-        #         push!(hmd_return_records, observ_defect_record)
-        #         push!(hmd_return_records, obval_defect_record)
-        #     end
-        #     observ_defect_record = ""
-        #     obval_defect_record = ""
-        #     obval_indicator = false
-        #end
-        # if defect_count < size(section_df,1)
-        #     observation_number += 1
-        #     # get the xsp_code from the dictionary for both directions
-        #     for xsp_code in ["CL1", "CR1"]
-        #         observation_number += 1
-        #         observ_defect_record = string("OBSERV\\", observation_number, ",BUTS,235,", xsp_code, ",", section_start_chainage, ",", section_end_chainage, ";\n")
-        #         obval_defect_record = string("OBVAL\\1,1,0,P,,;\n")
-        #         push!(hmd_return_records, observ_defect_record)
-        #         push!(hmd_return_records, obval_defect_record)
-        #     end
-        #     observ_defect_record = ""
-        #     obval_defect_record = ""
-        #     obval_indicator = false
-        # end
-    end # <-- close the for loop
+
+    end #isempty direction_list
+
+    println("Finished processing defects for this subsection from ", section_start_chainage, " to ", section_end_chainage)
 
     hmd_return_strings = [String(item) for item in hmd_return_records]
     
@@ -224,8 +266,12 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
     #println("hmd_return ", hmd_return)
     #return 99, observation_number
     #
+    #println("end of process obsvervation records ")
+    #return hmd_return, observation_number
+    #end of defect row
+
+    #println("end of process obsvervation records ")
     return hmd_return, observation_number
-    
     #println(section_df)
    
 end

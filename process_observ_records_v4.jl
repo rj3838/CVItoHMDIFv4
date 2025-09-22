@@ -1,5 +1,17 @@
 using DataFrames
 
+function replace_and_expand(v::Vector{T}, old_item::T, new_items::Vector{T}) where T
+    # Find the index of the item to be replaced
+    idx = findfirst(x -> x == old_item, v)
+
+    # If the item is found, replace and expand
+    if idx !== nothing
+        return vcat(v[1:idx-1], new_items, v[idx+1:end])
+    else
+        return v
+    end
+end
+
 function process_observ_records(section_df::DataFrame, observation_number::Int16)
     #println("starting process obsvervation records for section: ", section_df.SectionID[1])
     # this is used to return the records
@@ -20,7 +32,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
 
     # this list is used to track which directions have been processed in the section_df so we can create BUTS records if needed
     # for directions with defects 
-    direction_list = []
+    direction_processed_list = []
 
     # convert the section_df from a grouped DF to a standard DF before i do anything to it.
     conv_section_df = DataFrame(section_df)
@@ -129,7 +141,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
 
                 # change the defect so there are only 2 decimal places
                 new_defect_value = round(defect_value, digits=2)
-                obval_defect_record = string("OBVAL\\$idx,1,",new_defect_value,",",obval_code,",,;\n")
+                obval_defect_record = string("OBVAL\\1,1,",new_defect_value,",",obval_code,",,;\n")
                 push!(obval_records, obval_defect_record)
                 defect_present = true
                 obval_indicator = true
@@ -139,48 +151,59 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
                 #end    
             end
 
-
-            observation_number += 1
+            #observation_number += 1
                 #get the xsp_code from the dictionary
             xsp_code = xsp_dict[survey_direction]
 
-            if length(obval_records) != 0
+            observ_directions = [xsp_code]
+            new_items = ["CL1", "CR1"]
 
-                # there is no defect in the subsection so push the OBSERV record
-                observ_defect_record = string("OBSERV\\",observation_number,",",defect_code,",235,", xsp_code,",",section_start_chainage,",",section_end_chainage,";\n")
-                push!(hmd_return_records, string(observ_defect_record))
-                push!(direction_list, xsp_code)  # add the xsp_code to the direction_list
+            if xsp_code == "Both"
+                observ_directions = replace_and_expand(observ_directions, "Both", new_items)
+            end
 
-                #println("direction list ", direction_list)
+            println(observ_directions)
 
-                if calculation != "Count"
+            for xsp_direction in observ_directions
 
-                # there might be more than one obval_defect_record so iterate through the vector
-                    for record in obval_records
-                       push!(hmd_return_records,string(record))
+                if length(obval_records) != 0
+
+                    # there is a defect in the subsection so push the OBSERV record
+                    observation_number += 1
+                    observ_defect_record = string("OBSERV\\",observation_number,",",defect_code,",235,", xsp_direction,",",section_start_chainage,",",section_end_chainage,";\n")
+                    push!(hmd_return_records, string(observ_defect_record))
+                    push!(direction_processed_list, xsp_direction)  # add the xsp_code to the direction_list
+
+                    #println("direction list ", direction_list)
+
+                    if calculation != "Count"
+
+                    # there might be more than one obval_defect_record so iterate through the vector
+                        for record in obval_records
+                        push!(hmd_return_records,string(record))
+                        end
                     end
-                end
 
-            else
-                # we are probably dealing with a 'count' so,
-                # count the number of obval records and create a single obval record with the count in it
-                defect_value = length(obval_records)
-                obval_defect_record = string("OBVAL\\1,1,",defect_value,",",obval_code,",,;\n")
-                push!(hmd_return_records,string(obval_defect_record))
+                else
+                    # we are probably dealing with a 'count' so,
+                    # count the number of obval records and create a single obval record with the count in it
+                    defect_value = length(obval_records)
+                    obval_defect_record = string("OBVAL\\1,1,",defect_value,",",obval_code,",,;\n")
+                    push!(hmd_return_records,string(obval_defect_record))
 
-                    # clear the observ_defect_record and obval_defect_record for the next defect
-                observ_defect_record = ""
-                obval_defect_record = ""
+                        # clear the observ_defect_record and obval_defect_record for the next defect
+                    observ_defect_record = ""
+                    obval_defect_record = ""
 
-                    #push!(hmd_return_records,string(obval_defect_record))
-                obval_record = true
-            end # of obval records
-
+                        #push!(hmd_return_records,string(obval_defect_record))
+                    obval_record = true
+                end # of obval records
+            end
         end # defect_present
 
     end # <-- close the for defect loop
 
-    unique_set = Set(direction_list)
+    unique_set = Set(direction_processed_list)
     #println("unique_set :", unique_set)
     unique_direction_list = collect(unique_set)
     #println("unique_direction_list ", unique_direction_list)
