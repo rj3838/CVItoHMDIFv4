@@ -29,10 +29,10 @@ include("process_observ_records_v4.jl")
 include("hmd_tail_records.jl")
 include("fn_lateral_calc.jl")
 include("process_buts_record.jl")
-
+include("create_survey_record.jl")
 include("fn_get_multiple_data_grd_filenames.jl")
-
 include("fn_grid_processing.jl")
+include("categorise_value_ternary.jl")
 
 # function fn_gdf_iterate(gdf_passed)
 

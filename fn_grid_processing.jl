@@ -39,6 +39,10 @@ function fn_grid_processing(grid_file_name::String, section_df::DataFrame)
     HMD_output = build_hmdif_header_block(survey_ID)
 
     #println("HMD header block ", HMD_output)
+    #create the survey name and survey file name
+    survey_hmd_record = create_survey_record(survey_ID)
+    push!(HMD_output, survey_hmd_record)
+
     #println("Processing survey to gdf ")
     network_gdf = DataFrames.groupby(combined_df, :Network)
 
@@ -63,6 +67,8 @@ function fn_grid_processing(grid_file_name::String, section_df::DataFrame)
         #returned_records = join(returned_records)
         #println(typeof(returned_records), " ", length(returned_records), " records returned from process_combined_data")
         #println(typeof(HMD_output), " ", length(HMD_output))
+        println("typeof HMD_output :", typeof(HMD_output))
+        println("typeof returned_records :", typeof(returned_records))
         append!(HMD_output, returned_records)
     end
 
@@ -78,7 +84,8 @@ function fn_grid_processing(grid_file_name::String, section_df::DataFrame)
     #println("HMD output type ", typeof(HMD_output))
 
     # write the HMD output to a file
-    #println("Writing HMDIF output to file ", survey_output_file)
+    survey_output_file = string(replace(grid_file_name, ".grd" => ".HMD"))
+    println("Writing HMDIF output to file ", survey_output_file)
 
     file = open(survey_output_file, "w")
     try

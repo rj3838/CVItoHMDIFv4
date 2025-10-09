@@ -123,7 +123,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
                     #println("returned_rows", returned_rows)
                     #println("returned cluster for count", cluster)
                     defect_value = fn_count_calc(defect_df, cluster, returned_rows)
-                    obval_code = 'V'
+                    obval_code = 'P' # was'V' until calculation found in spec see vol2, chap 7, pg12 !
                     #println(calculation, " Count ", defect_value)
                 end
 
@@ -141,10 +141,15 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
 
                 # change the defect so there are only 2 decimal places
                 new_defect_value = round(defect_value, digits=2)
-                obval_defect_record = string("OBVAL\\1,1,",new_defect_value,",",obval_code,",,;\n")
-                push!(obval_records, obval_defect_record)
-                defect_present = true
-                obval_indicator = true
+
+                obval_option = categorise_value_ternary(new_defect_value)
+
+                if obval_option != "0"
+                    obval_defect_record = string("OBVAL\\1,", obval_option ,",", new_defect_value,",",obval_code,";\n")
+                    push!(obval_records, obval_defect_record)
+                    defect_present = true
+                    obval_indicator = true
+                end
 
                 #println("obval_records", obval_records)
 
@@ -182,18 +187,25 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
                         for record in obval_records
                         push!(hmd_return_records,string(record))
                         end
+                    #end
+
+                    else
+                        # we are probably dealing with a 'count' so,
+                        # count the number of obval records and create a single obval record with the count in it
+                        defect_value = length(obval_records)
+
+                        # the spec says multiply by 5 and express as a precentage of the section length, so
+                        # spec at vol2, chapt7, pg12, table 4, Count  defects.
+                        section_chainage = section_end_chainage - section_start_chainage
+                        defect_value = defect_value * 5
+                        defect_count_pc = defect_value/section_chainage * 100
+                        obval_defect_record = string("OBVAL\\1,1,",defect_count_pc,",P;\n")
+                        push!(hmd_return_records,string(obval_defect_record))
+
+                            # clear the observ_defect_record and obval_defect_record for the next defect
+                        observ_defect_record = ""
+                        obval_defect_record = ""
                     end
-
-                else
-                    # we are probably dealing with a 'count' so,
-                    # count the number of obval records and create a single obval record with the count in it
-                    defect_value = length(obval_records)
-                    obval_defect_record = string("OBVAL\\1,1,",defect_value,",",obval_code,",,;\n")
-                    push!(hmd_return_records,string(obval_defect_record))
-
-                        # clear the observ_defect_record and obval_defect_record for the next defect
-                    observ_defect_record = ""
-                    obval_defect_record = ""
 
                         #push!(hmd_return_records,string(obval_defect_record))
                     obval_record = true
@@ -214,7 +226,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
                 #
             observation_number += 1
             observ_defect_record = string("OBSERV\\", observation_number, ",BUTS,235,", direction, ",", section_start_chainage, ",", section_end_chainage, ";\n")
-            obval_defect_record = string("OBVAL\\1,1,0,P,,;\n")
+            obval_defect_record = string("OBVAL\\1,3,100,P;\n")
             push!(hmd_return_records, observ_defect_record)
             push!(hmd_return_records, obval_defect_record)
 
