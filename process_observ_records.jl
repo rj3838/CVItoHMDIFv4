@@ -117,7 +117,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
                     #observ_defect_record = string("OBSERV\\",observation_number,",",defect_code,",235,,",section_start_chainage,",",section_end_chainage,";\n")
                     #obval_defect_record = string("OBVAL\\1,1,",round(defect_value, digits=2),",",obval_code,",,;\n")
                     #observ_defect_record = string("OBSERV\\",frame_number,",",defect_code,",235,",minimum(conv_section_df.Chainage),",",maximum(conv_section_df.Chainage),";\n")
-                obval_defect_record = string("OBVAL\\$idx,1,",new_defect_value,",",obval_code,",,;\n")
+                obval_defect_record = string("OBVAL\\$idx,1,",new_defect_value,",",obval_code,";\n")
                 push!(obval_records, obval_defect_record)
                 defect_present = true
                 obval_indicator = true
@@ -163,7 +163,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
             # get the xsp_code from the dictionary for both directions
             for xsp_code in ["CL1", "CR1"]
                 observ_defect_record = string("OBSERV\\", observation_number, ",BUTS,235,", xsp_code, ",", section_start_chainage, ",", section_end_chainage, ";\n")
-                obval_defect_record = string("OBVAL\\1,1,0,P,,;\n")
+                obval_defect_record = string("OBVAL\\1,1,0,P;\n")
                 push!(hmd_return_records, observ_defect_record)
                 push!(hmd_return_records, obval_defect_record)
             end

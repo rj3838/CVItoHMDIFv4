@@ -30,6 +30,7 @@ include("merge_split_section.jl")
 include("process_observ_records.jl")
 include("hmd_tail_records.jl")
 include("fn_lateral_calc.jl")
+include("create_survey_record.jl")
 
 function fn_gdf_iterate(gdf_passed)
 
@@ -334,6 +335,10 @@ function main()
     HMD_output = build_hmdif_header_block(survey_ID)
 
     #println("HMD header block ", HMD_output)
+
+    survey_hmd_record = create_survey_record(survey_ID)
+    println("type of create_survey_record:", typeof(survey_hmd_record))
+    push!(HMD_output, survey_hmd_record)
 
     network_gdf = DataFrames.groupby(combined_df, :Network)
 
