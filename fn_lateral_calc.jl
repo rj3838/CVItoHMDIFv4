@@ -52,19 +52,20 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
     min_cols = minimum(col_values)
     max_cols = maximum(col_values)
 
-    # calcualte size of rows and cols
+    # calcualte size of rows and cols for the defect
 
-    size_rows = ((max_rows - min_rows) + 0.2) * 5 # 5 rows per metre
+    size_rows = ((max_rows - min_rows) + 0.2) / 5 # 5 rows per metre (+ 0.2 as there is no row at 0m)
     ## the col numbers are at the end of the width so 400 -200 is 200 cm and never includes the lowest of the two values.
+    # in this example column 200 actually starts at 0 (but there is no column 0 to calculate with)
     size_cols = ((max_cols - min_cols) * 200) + 200 
 
     # calculate the lateral extent (see ukpms user man, vol 2, ch 7, pg 8)
     # width of the carriageway is the last heading of the section dataframe 
 
-    lateral_extent = parse(Int64, names(section_df)[end])
+    max_lateral_extent = parse(Int64, names(section_df)[end])
 
-    println("lateral_extent ", lateral_extent)
-    println(typeof(lateral_extent))
+    #println("max lateral_extent ", max_lateral_extent)
+    #println(typeof(max_lateral_extent))
     #numeric_lateral_extent = parse(Int, lateral_extent)
     #println(numeric_lateral_extent)
     println("defect_size :", size_cols)
@@ -76,87 +77,60 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
     end
 
 # Example: Dividing the integer lateral_extent into eighths
-    result_2 = divide_into_eighths_comp(lateral_extent)
+    lateral_extent_range = divide_into_eighths_comp(max_lateral_extent)
+    #println(lateral_extent_range)
 
-    println(result_2)
+    # find out which of the 'brackets' in the lateral_extent_range the defect size (size_cols) fits
+    # so for a 4m width the lateral_extent_range is 
+    # [500.0, 1000.0, 1500.0, 2000.0, 2500.0, 3000.0, 3500.0, 4000.0] it's the eighths.
+    # need to find the lateral extent in terms of the proportion where the size cols fits.
 
-    # drop the SectionID, Chainage and sectionNr columns from the section DataFrame
+    # get the values we are interested in from the lateral_extent_range
+    indices_to_keep = [1, 2, 4, 6, 8]
 
-    #local_section_df = select(section_df, Not(:Chainage))
-    #local_section_df = section_df
+    lateral_extent_values_of_interest = lateral_extent_range[indices_to_keep]
 
-    #get the numbered cols as strings
+    println("lateral extent brackets : ", lateral_extent_values_of_interest)
 
-    section_str_cols = names(section_df)
+    extent_position = findfirst(x -> size_cols <= x, lateral_extent_values_of_interest)
 
-    # convert the column names to a integers (in a vector). 
-    # so we can then perform calculation on them.
+    println("extent_position : ", extent_position)
 
-    section_int_cols = string_vector_to_int_vector(section_str_cols)
-    
-    #start_width = section_int_cols[first_column]
-    #println("start width ", start_width)
-    #end_width = section_int_cols[last_column]
-    #println("end width ", end_width)
-    #min_width = section_int_cols[1]
-    # add 200 to the width as the 'cols' are 200 wide !
-    #min_width = (end_width - start_width) + 200 
-    #min_width_in_m = min_width / 1000
-    #println("min width ", min_width)
-    #max_width = section_int_cols[end]
-    #println("max width ", max_width)
-    #column_interval = section_int_cols[2] - min_width
-    #println("column_width ", column_interval)
-    
-    #defect_width = (end_width - start_width) + 200 # in mm
-    #defect_width_in_m = defect_width / 1000
-    #println("Defect width m: ", defect_width_in_m)
+    function assign_value_vector(n::Int)
+        
+        # these are the multipliers for the transverse/lateral extent
+        VALUE_VECTOR = [0.125, 0.25, 0.5, 0.75, 1] 
 
-    # if the defect width is less than 1m do not report it
-    #section_width = max_width - min_width + 200 #there is no 0 column so add 200 to get the full width
+        # Check bounds before indexing to avoid an error
+        if 1 <= n <= length(VALUE_VECTOR)
+            return VALUE_VECTOR[n]
+        else
+            return 2
+        end
+    end
 
-    #calculate the length of the defect (needed for the area calc)
+    extent_value = assign_value_vector(extent_position)
 
-    #first_inner_vector = first(returned_clusters)
-    #first_row = (first_inner_vector)[1]
-    #println("first_row ", first_row)
-    #last_inner_vector = last(returned_clusters)
-    #last_row = (last_inner_vector)[1]
-    #println("last_row ", last_row)
-    #println("section_df ", section_df)
-    #start_chainage = section_df.Chainage[first_row]
-    #println("start chainage ", start_chainage)
-    #end_chainage = section_df.Chainage[last_row]
-    #println("End chainage : ", end_chainage)
+    println("extent_value : ", extent_value)
 
-    #total length Σ (end_chainage - start_chainage) from the spec !
-    # multiply the length by 1000 as the length is in metres and the width is in mm !
-    # that way the area works !
-    #defect_length = (end_chainage - start_chainage) 
-    # each grid row is 0.2m so the defect_length is divided by 5
-    #defect_length = (last_row - first_row) / 5
-    #println("defect length m: ", defect_length)
+    # length of defect = size_rows (five rows per metre and calc is above here)
+    # extent of defect = extent_value
+    # subection length = length of the section_df / 5 (five rows per metre)
+    # subsection_area = subsection_length * 1 (1 is the full extent/width)
 
-    #defect_area = defect_length * defect_width_in_m
-    #println("defect area m^2: ", defect_area)
+    # Defect area
 
-    #defect_percentage = (defect_width/section_width) * 100
-    # the total area of a 20m subsection is ...
-    # 20000 mm (length) x 4000 mm = 80000000
-    # 20m x 4m = 80 m^2
-    # calculate the section area as the number of rows in the section_df
-    # this takes care of the last section being less that 20m !
-    #section_length = size(section_df)[1] / 5
+    subsection_length = (nrow(section_df) / 5) - 0.2 # because each row is 0.2m and nrow returns one too many
 
-    #defect_percentage = (defect_area/section_length) * 100
-    #println(defect_percentage)
-    #println("section_df ", local_section_df)
+    println("subsection_length ", subsection_length)
 
-    #println("defect_percentage ",defect_percentage)
+    defect_area = (size_rows) * extent_value
 
-    #defect_percentage = round(defect_percentage, digits=2)
-    #println("rounded percentage ", defect_perc_rounded)
-    #println("rounded defect_percentage ",defect_percentage)
+    println("defect_area ", defect_area)
+
+    defect_percentage = (defect_area / subsection_length) * 100
+
+
 
     if typeof(defect_percentage) == "String"
         defect_percentage = parse(Float64, direct_percentage)
