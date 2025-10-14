@@ -36,12 +36,36 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
     # last_column = (last_inner_vector)[2]
     # println("last_column ", last_column)
 
+    # remane the columns to get rid of any underscores
+
+    rename!(section_df, names(section_df) .=> replace.(names(section_df), "_" => ""))
+
+    # remove the columns with string names and the under score at the front of the names
+
+    # Get all column names
+    all_names = names(section_df)
+
+    # Use a list comprehension and tryparse to filter column names.
+    # This returns a vector containing only the names that can be parsed to a number.
+    numeric_column_names = [
+        name for name in all_names 
+        if tryparse(Float64, name) !== nothing
+    ]
+
+    # Use select! to keep only the columns identified as numeric
+    # This operation modifies the DataFrame 'df' in place.
+    DataFrames.select!(section_df, numeric_column_names)
+
+    #println("Final DataFrame Column Names:")
+    #println(names(section_df))
+
+
     # Extract all 'a' values (the first component)
     # The expression `getindex.(cartesian_vector, 1)` uses broadcasting (`.`)
     # to apply `getindex(::CartesianIndex, 1)` to every element.
     row_values = getindex.(returned_clusters, 1)
 
-    # 2. Extract all 'b' values (the second component)
+    #Extract all 'b' values (the second component)
     col_values = getindex.(returned_clusters, 2)
 
 
@@ -61,14 +85,14 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
 
     # calculate the lateral extent (see ukpms user man, vol 2, ch 7, pg 8)
     # width of the carriageway is the last heading of the section dataframe 
-
+    #println("sect_df names : ", names(section_df))
     max_lateral_extent = parse(Int64, names(section_df)[end])
 
     #println("max lateral_extent ", max_lateral_extent)
     #println(typeof(max_lateral_extent))
     #numeric_lateral_extent = parse(Int, lateral_extent)
     #println(numeric_lateral_extent)
-    println("defect_size :", size_cols)
+    #println("defect_size :", size_cols)
 
     function divide_into_eighths_comp(n::Integer)::Vector{Float64}
         # For each multiplier 'i' from 1 to 8, calculate i * n / 8.
@@ -90,11 +114,11 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
 
     lateral_extent_values_of_interest = lateral_extent_range[indices_to_keep]
 
-    println("lateral extent brackets : ", lateral_extent_values_of_interest)
+    #println("lateral extent brackets : ", lateral_extent_values_of_interest)
 
     extent_position = findfirst(x -> size_cols <= x, lateral_extent_values_of_interest)
 
-    println("extent_position : ", extent_position)
+    #println("extent_position : ", extent_position)
 
     function assign_value_vector(n::Int)
         
@@ -111,7 +135,7 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
 
     extent_value = assign_value_vector(extent_position)
 
-    println("extent_value : ", extent_value)
+    #println("extent_value : ", extent_value)
 
     # length of defect = size_rows (five rows per metre and calc is above here)
     # extent of defect = extent_value
@@ -122,11 +146,11 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
 
     subsection_length = (nrow(section_df) / 5) - 0.2 # because each row is 0.2m and nrow returns one too many
 
-    println("subsection_length ", subsection_length)
+    #println("subsection_length ", subsection_length)
 
     defect_area = (size_rows) * extent_value
 
-    println("defect_area ", defect_area)
+    #println("defect_area ", defect_area)
 
     defect_percentage = (defect_area / subsection_length) * 100
 
@@ -139,6 +163,5 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
     return_defect_percentage = round(defect_percentage, digits=2)
 
     return return_defect_percentage
-    #return Float64(99.9) # this does always return 99.9
 
 end

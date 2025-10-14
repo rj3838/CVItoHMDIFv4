@@ -9,7 +9,7 @@
 
 using CSV, DataFrames
 
-function process_combined_data(combined_df::DataFrame, survey_ID::String)
+function process_combined_data(combined_df::DataFrame, survey_ID::String, hmd_section_count::Integer)
     println("Processing combined data for survey ID: $survey_ID")
     # Group by Network
     grouped_df = DataFrames.groupby(combined_df, :Network)
@@ -61,6 +61,7 @@ function process_combined_data(combined_df::DataFrame, survey_ID::String)
     #df_merged = merge_split_sections(survey_df, corrected_survey_df)
 
     #CSV.write("new_survey_records.csv", df_merged, header=true)
+        total_section_record_count = 0
 
         survey_df = DataFrame(combined_df)
 
@@ -73,8 +74,12 @@ function process_combined_data(combined_df::DataFrame, survey_ID::String)
 
             section_df = DataFrame(section_frame)
             # Create a section record for each network
-            #println("scetion_nunmber : ", section_number)
-            section_records = process_section_records(section_df, network, section_number, survey_ID)
+            println("scetion_nunmber : ", section_number)
+            println("total_section_record_count : ",total_section_record_count)
+            # so the section_record_count continues to increment add the cruuent section to 
+            # the total count passed in to the function
+            total_section_record_count = hmd_section_count + section_number
+            section_records = process_section_records(section_df, network, total_section_record_count, survey_ID)
             #println("Section records: ", section_records)
             #println(typeof(section_records))
             
@@ -107,7 +112,7 @@ function process_combined_data(combined_df::DataFrame, survey_ID::String)
 
     #hmdif_count = lastindex(hmd_collected)
     println("finished processing survey ID: $survey_ID with ", length(survey_records), " records")
-    return survey_records
+    return survey_records, total_section_record_count
     end
 end
 #return hmd_collected

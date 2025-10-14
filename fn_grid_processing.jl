@@ -46,6 +46,10 @@ function fn_grid_processing(grid_file_name::String, section_df::DataFrame)
     #println("Processing survey to gdf ")
     network_gdf = DataFrames.groupby(combined_df, :Network)
 
+    # counts the number of section records so the count is maintained acrocc the potential changes in the Client 
+    # network number/id
+    section_record_count::Integer = 0
+
     for gdf in network_gdf
         #println("Network ", gdf.Network[1])
         # if there is nothing in the network (gdf length is 0)
@@ -63,12 +67,12 @@ function fn_grid_processing(grid_file_name::String, section_df::DataFrame)
         #println("gdf last chainage ", last(gdf.Chainage))
         #println("gdf length ", last(gdf.Chainage) - first(gdf.Chainage))
         standard_df = DataFrame(gdf)
-        returned_records = process_combined_data(standard_df, survey_ID)
+        returned_records, section_record_count = process_combined_data(standard_df, survey_ID, section_record_count)
         #returned_records = join(returned_records)
         #println(typeof(returned_records), " ", length(returned_records), " records returned from process_combined_data")
         #println(typeof(HMD_output), " ", length(HMD_output))
-        println("typeof HMD_output :", typeof(HMD_output))
-        println("typeof returned_records :", typeof(returned_records))
+        #println("typeof HMD_output :", typeof(HMD_output))
+        #println("typeof returned_records :", typeof(returned_records))
         append!(HMD_output, returned_records)
     end
 

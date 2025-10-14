@@ -25,7 +25,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
     section_start_chainage = section_df.StartCh[1]
     section_end_chainage = section_df.EndCh[1]
 
-    println("start ch : ", section_start_chainage," end ch : ", section_end_chainage)
+    #println("start ch : ", section_start_chainage," end ch : ", section_end_chainage)
 
     #println("section names: ",names(section_df))
     #println(typeof(section_df))
@@ -139,10 +139,10 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
                     check_defect_value = 0
                 end
 
+                obval_option = categorise_value_ternary(defect_value)
+
                 # change the defect so there are only 2 decimal places
                 new_defect_value = round(defect_value, digits=2)
-
-                obval_option = categorise_value_ternary(new_defect_value)
 
                 if obval_option != "0"
                     obval_defect_record = string("OBVAL\\1,", obval_option ,",", new_defect_value,",",obval_code,";\n")
@@ -167,11 +167,11 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
                 observ_directions = replace_and_expand(observ_directions, "Both", new_items)
             end
 
-            println(observ_directions)
+            #println(observ_directions)
 
             for xsp_direction in observ_directions
 
-                if length(obval_records) != 0
+                if length(obval_records) != 0 && (section_start_chainage != section_end_chainage)
 
                     # there is a defect in the subsection so push the OBSERV record
                     observation_number += 1
@@ -199,6 +199,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
                         section_chainage = section_end_chainage - section_start_chainage
                         defect_value = defect_value * 5
                         defect_count_pc = defect_value/section_chainage * 100
+                        defect_count_pc = round(defect_count_pc, digits=2)
                         obval_defect_record = string("OBVAL\\1,1,",defect_count_pc,",P;\n")
                         push!(hmd_return_records,string(obval_defect_record))
 
@@ -222,7 +223,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
 
     for direction in ["CL1", "CR1"]
             
-        if direction ∉ unique_direction_list
+        if (direction ∉ unique_direction_list) && (section_start_chainage != section_end_chainage)
                 #
             observation_number += 1
             observ_defect_record = string("OBSERV\\", observation_number, ",BUTS,235,", direction, ",", section_start_chainage, ",", section_end_chainage, ";\n")

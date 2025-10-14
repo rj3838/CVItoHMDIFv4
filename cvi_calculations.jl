@@ -44,12 +44,19 @@ function fn_count_calc(section_df,returned_clusters, returned_rows)
     #println("type of returned clusters ",typeof(returned_clusters))
     defect_rows = size(returned_clusters)[1]
 
+    section_length = (nrow(section_df)) * 0.2 # section length in metres, one row is 0.2 m
+
+    # see vol2 ch7 pg 12 table 4 for defect count calculation
+
+    defect_calc = ((defect_rows * 5) / section_length) * 100
+
     # converting to float as the other calculations for the OBVAL record return a float64
     # before rounding to two decimal places. It's easier to do this here than change the generic BVAL code
 
-    defect_rows_float = float(defect_rows)
-    #println(returned_clusters, " ", defect_rows_float)
+    return_defect_pc = float(defect_calc)
+    println("return_defect_pc : ", return_defect_pc)
+    println("rounded return_defect_pc : ", round(return_defect_pc, digits=2))
     #defect_rows = returned_rows
-    return defect_rows_float
+    return return_defect_pc
 
 end
