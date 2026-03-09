@@ -12,7 +12,7 @@ using Gtk
 include("ClusterIdentification2.jl")
 include("cvi_calculations.jl")
 include("update_grid_with_section_2.jl")
-#include("Section_length.jl")
+##include("Section_length.jl")
 include("read_grid.jl")
 #include("fn_hmd_cvi_data_records.jl")
 include("find_rows_with_value.jl")

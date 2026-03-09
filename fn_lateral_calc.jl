@@ -149,6 +149,7 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
     #println("subsection_length ", subsection_length)
 
     defect_area = (size_rows) * extent_value
+    defect_percentage = 0.0
 
     #println("defect_area ", defect_area)
 
