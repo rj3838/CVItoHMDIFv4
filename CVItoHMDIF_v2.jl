@@ -91,4 +91,4 @@ function main()
     #print("grid file names processed", grid_file_names)
 end
 
-main()
+Base.invokelatest(main)
