@@ -44,9 +44,13 @@ function fn_grid_processing(grid_file_name::String, section_df::DataFrame)
     push!(HMD_output, survey_hmd_record)
 
     #println("Processing survey to gdf ")
+    if nrow(combined_df) == 0
+        println("WARNING: No data in combined_df for $grid_file_name — check grid chainages match route chainages.")
+        return (false, "combined_df is empty")
+    end
     network_gdf = DataFrames.groupby(combined_df, :Network)
 
-    # counts the number of section records so the count is maintained acrocc the potential changes in the Client 
+    # counts the number of section records so the count is maintained across the potential changes in the Client 
     # network number/id
     section_record_count::Integer = 0
 

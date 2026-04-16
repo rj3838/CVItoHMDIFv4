@@ -26,6 +26,19 @@ function build_main_df(grid_df, route_df, passed_section_df)
         append!(result_rows, temp)
     end
 
+    # Remove Column11 since it's empty/useless
+    if "Column11" in names(result_rows)
+        df.select!(result_rows, Not(:Column11))
+        println("Removed empty Column11")
+    end
+
+    println("DataFrame schema:")
+    for col in names(result_rows)
+        println("  $col: ", eltype(result_rows[!, col]))
+    end
+
+
+
     # check the result_rows column names
     #println("Result Rows Column Names: ", names(result_rows))
     CSV.write("temp_rows.csv", result_rows, delim=',', header=true, writeheader=true,
@@ -89,10 +102,10 @@ function build_main_df(grid_df, route_df, passed_section_df)
 
     df.sort!(combined_df, [:SectionID, :Chainage, :Direction])
 
-    # Write the combined DataFrame to a CSV file    
+    # Write the combined DataFrame to a CSV file for testing purposes 
 
-    CSV.write("updated_grid.csv", combined_df, delim=',', header=true, writeheader=true,
-                append=false, quotechar='"', stringtype=string)
+    #CSV.write("updated_grid.csv", combined_df, delim=',', header=true, writeheader=true,
+    #            append=false, quotechar='"', stringtype=string)
 
     
     return combined_df
