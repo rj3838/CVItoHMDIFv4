@@ -40,7 +40,9 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
     # check to see if the section_df contains only zeros in the defect columns
     # if it does then we can skip processing this section_df
 
-    defect_df = select(conv_section_df, 3:22)  # Adjust column indices as needed
+    # Select defect columns dynamically: from column 3 up to (but not including) SectionID
+    sectionid_col = findfirst(==("SectionID"), names(conv_section_df))
+    defect_df = select(conv_section_df, 3:sectionid_col-1)
 
     # Iterate through columns and convert floats
     for name in names(defect_df)
