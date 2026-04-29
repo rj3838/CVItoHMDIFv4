@@ -1,0 +1,7 @@
+[deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DataFramesMeta = "1313f7d8-7da2-5740-9ea0-a2ca25f37964"
+FilePathsBase = "48062228-2e41-5def-b9a4-89aafe57970f"
+NativeFileDialog = "e1fe445b-aa65-4df4-81c1-2041507f0fd4"
+ShiftedArrays = "1277b4bf-5013-50f5-be3d-901d8477a67a"
