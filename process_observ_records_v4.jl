@@ -18,8 +18,8 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
     hmd_return_records = []
     observ_defect_record = ""
     obval_defect_record = ""
-    obval_indicator = false
-    obval_record = false
+    #obval_indicator = false
+    #obval_record = false
 
     # The chainage for each observation will be
     section_start_chainage = section_df.StartCh[1]
@@ -74,7 +74,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
         defect_code = row[2]
         survey_direction = row[3]
         calculation = row[4]
-        lower_limit = row[5]  
+        #lower_limit = row[5]
 
         # convert the survey direction cross section code which is reported in the observ_defect_record
         xsp_dict = Dict("F" => "CL1", "R" => "CR1", "B" => "Both", "N/A" => "N")
@@ -90,7 +90,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
         defect_value = ""
         obval_code = ""
         obval_records = []
-        defect_present = false
+        #defect_present = false
 
         #println("typeof returned_clusters :", typeof(returned_clusters))
         #println("returned_clusters :", returned_clusters)
