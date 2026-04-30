@@ -55,3 +55,5 @@ cvi_code,defect_code, direction,calc_needed, lower_limit
 54,NNDE,R,Length,1
 55,NNOA,F,Length,1
 56,NNOA,R,Length,1
+0,BUTS,F,NoDefect,0
+0,BUTS,R,NoDefect,0
