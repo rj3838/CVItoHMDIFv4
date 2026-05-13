@@ -9,6 +9,8 @@ using DataFrames
 using DataFramesMeta
 using Gtk
 
+include("process_observ_records_v4.jl")
+
 include("ClusterIdentification2.jl")
 include("cvi_calculations.jl")
 include("update_grid_with_section_2.jl")
@@ -25,7 +27,7 @@ include("process_combined_data.jl")
 include("process_section_records.jl")
 include("correct_split_sections.jl")
 #include("merge_split_section.jl")
-include("process_observ_records_v4.jl")
+#
 include("hmd_tail_records.jl")
 include("fn_lateral_calc.jl")
 include("process_buts_record.jl")
@@ -92,3 +94,5 @@ function main()
 end
 
 Base.invokelatest(main)
+
+

@@ -25,7 +25,13 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
     section_start_chainage = section_df.StartCh[1]
     section_end_chainage = section_df.EndCh[1]
 
-    #println("start ch : ", section_start_chainage," end ch : ", section_end_chainage)
+    # println("start ch : ", section_start_chainage," end ch : ", section_end_chainage)
+    # calculate the length between the rows. This defines the size of the grid along the survey direction and is needed for the lateral calculation. 
+    # We can get this from the section_df as the length is the same for all rows in the section_df
+
+    println("section names: ",names(section_df))
+    println(typeof(section_df))
+    println("first rows of section_df : ", first(section_df, 2))
 
     #println("section names: ",names(section_df))
     #println(typeof(section_df))
@@ -37,10 +43,13 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
     # convert the section_df from a grouped DF to a standard DF before i do anything to it.
     conv_section_df = DataFrame(section_df)
 
+    number_of_section_df_cols = size(conv_section_df, 2)
+    println("number of columns in section_df ", number_of_section_df_cols)
+
     # check to see if the section_df contains only zeros in the defect columns
     # if it does then we can skip processing this section_df
 
-    defect_df = select(conv_section_df, 3:22)  # Adjust column indices as needed
+    defect_df = select(conv_section_df, 3:number_of_section_df_cols)  # Adjust column indices as needed
 
     # Iterate through columns and convert floats
     for name in names(defect_df)
@@ -108,21 +117,24 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
                 #println("passing to calculations: ",names(grid_defects))
 
                 if calculation == "Length"
-                    defect_value = fn_length_calc(defect_df, cluster, returned_rows)
+                    section_length = section_df[1, "Length"] # length is the first column in the section_df and is the same for all rows in the section_df
+                    defect_value = fn_length_calc(defect_df, cluster, returned_rows, section_length)
                     obval_code = "P"
                     #println(calculation, "Length", defect_value)
                 end
 
                 if calculation == "Lateral"
-                    defect_value = fn_lateral_calc(defect_df, cluster, returned_rows)
+                    section_length = section_df[1, "Length"] # length is the first column in the section_df and is the same for all rows in the section_df
+                    defect_value = fn_lateral_calc(defect_df, cluster, returned_rows, section_length)
                     obval_code = "P"
                     #println(calculation, "Lateral  ", defect_value)
                 end
 
                 if calculation == "Count"
+                    section_length = section_df[1, "Length"] # length is the first column in the section_df and is the same for all rows in the section_df
                     #println("returned_rows", returned_rows)
                     #println("returned cluster for count", cluster)
-                    defect_value = fn_count_calc(defect_df, cluster, returned_rows)
+                    defect_value = fn_count_calc(defect_df, cluster, returned_rows, section_length)
                     obval_code = 'P' # was'V' until calculation found in spec see vol2, chap 7, pg12 !
                     #println(calculation, " Count ", defect_value)
                 end

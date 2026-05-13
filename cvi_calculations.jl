@@ -1,4 +1,4 @@
-function fn_length_calc(section_df,returned_clusters, returned_rows) 
+function fn_length_calc(section_df,returned_clusters, returned_rows, section_length) 
     
     #println("type of returned clusters ",typeof(returned_clusters))
     #println(returned_clusters)
@@ -39,7 +39,7 @@ function fn_length_calc(section_df,returned_clusters, returned_rows)
 
 end
 
-function fn_count_calc(section_df,returned_clusters, returned_rows) 
+function fn_count_calc(section_df,returned_clusters, returned_rows, section_length) 
 
     #println("type of returned clusters ",typeof(returned_clusters))
     defect_rows = size(returned_clusters)[1]

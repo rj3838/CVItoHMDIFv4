@@ -1,4 +1,4 @@
-function fn_lateral_calc(section_df,returned_clusters, returned_rows) 
+function fn_lateral_calc(section_df,returned_clusters, returned_rows, section_length) 
     
     function string_vector_to_int_vector(str_vec::Vector{String})::Vector{Int64}
     # this converts a vector of strings to a vector of integers (deals with column headers)
@@ -37,10 +37,16 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
     # println("last_column ", last_column)
 
     # remane the columns to get rid of any underscores
+    #println("column names before renaming : ", names(section_df))
 
     rename!(section_df, names(section_df) .=> replace.(names(section_df), "_" => ""))
 
     # remove the columns with string names and the under score at the front of the names
+    #println("column names before removing non numeric columns : ", names(section_df))
+    #println("first 5 rows : ")
+    #print(first(section_df, 5))
+    #section_length = section_df[1, "Length"]
+    println("section length ", section_length)
 
     # Get all column names
     all_names = names(section_df)
@@ -59,6 +65,19 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
     #println("Final DataFrame Column Names:")
     #println(names(section_df))
 
+    conv_numeric_column_names = parse.(Int,numeric_column_names)
+    #println("gap is : ", diff(conv_numeric_column_names))
+
+    # calculate the size of the column (teansverse) 
+
+    width_of_cols = diff(conv_numeric_column_names)[1]
+
+    number_of_cols = length(conv_numeric_column_names)
+    println("width of cols ", width_of_cols)
+    println("number of cols ", number_of_cols)
+
+    if 
+
 
     # Extract all 'a' values (the first component)
     # The expression `getindex.(cartesian_vector, 1)` uses broadcasting (`.`)
@@ -73,16 +92,30 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
     min_rows = minimum(row_values)
     max_rows = maximum(row_values)
 
+    println("min row ", min_rows)
+    println("max row ", max_rows)
+
     min_cols = minimum(col_values)
     max_cols = maximum(col_values)
 
     # calcualte size of rows and cols for the defect
 
-    size_rows = ((max_rows - min_rows) + 0.2) / 5 # 5 rows per metre (+ 0.2 as there is no row at 0m)
+    #size_rows = width_of_cols # calc is above
+
+    println("column names : ", names(section_df))
+
+    rows_in_section = nrow(section_df)
+    #length_of_section = section_df.Length[1] # length is the first column in the section_df and is the same for all rows in the section_df
+
+    println("rows in section ", rows_in_section)
+    println("length of section ", section_length)
+
+    size_rows = section_length / rows_in_section # so we can calculate the longitudinal length of each row (distance surveyed) 
+    #size_rows = ((max_rows - min_rows) + 0.2) / 5 # 5 rows per metre (+ 0.2 as there is no row at 0m)
     ## the col numbers are at the end of the width so 400 -200 is 200 cm and never includes the lowest of the two values.
     # in this example column 200 actually starts at 0 (but there is no column 0 to calculate with)
-    size_cols = ((max_cols - min_cols) * 200) + 200 
-
+    #size_cols = ((max_cols - min_cols) * 200) + 200 
+    size_cols = width_of_cols # calc is above !
     # calculate the lateral extent (see ukpms user man, vol 2, ch 7, pg 8)
     # width of the carriageway is the last heading of the section dataframe 
     #println("sect_df names : ", names(section_df))
@@ -101,7 +134,7 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
     end
 
 # Example: Dividing the integer lateral_extent into eighths
-    lateral_extent_range = divide_into_eighths_comp(max_lateral_extent)
+    #lateral_extent_range = divide_into_eighths_comp(max_lateral_extent)
     #println(lateral_extent_range)
 
     # find out which of the 'brackets' in the lateral_extent_range the defect size (size_cols) fits
@@ -144,9 +177,9 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
 
     # Defect area
 
-    subsection_length = (nrow(section_df) / 5) - 0.2 # because each row is 0.2m and nrow returns one too many
+    #subsection_length = (nrow(section_df) / 5) - 0.2 # because each row is 0.2m and nrow returns one too many
 
-    #println("subsection_length ", subsection_length)
+    println("subsection_length ", subsection_length)
 
     defect_area = (size_rows) * extent_value
     defect_percentage = 0.0
@@ -154,8 +187,6 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows)
     #println("defect_area ", defect_area)
 
     defect_percentage = (defect_area / subsection_length) * 100
-
-
 
     if typeof(defect_percentage) == "String"
         defect_percentage = parse(Float64, direct_percentage)
