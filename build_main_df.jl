@@ -26,13 +26,7 @@ function build_main_df(grid_df, route_df, passed_section_df)
         append!(result_rows, temp)
     end
 
-    # Remove Column11 since it's empty/useless
-    if "Column11" in names(result_rows)
-        df.select!(result_rows, Not(:Column11))
-        println("Removed empty Column11")
-    end
-
-    println("DataFrame schema:")
+println("DataFrame schema:")
     for col in names(result_rows)
         println("  $col: ", eltype(result_rows[!, col]))
     end

@@ -18,8 +18,8 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
     hmd_return_records = []
     observ_defect_record = ""
     obval_defect_record = ""
-    obval_indicator = false
-    obval_record = false
+    #obval_indicator = false
+    #obval_record = false
 
     # The chainage for each observation will be
     section_start_chainage = section_df.StartCh[1]
@@ -49,7 +49,14 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
     # check to see if the section_df contains only zeros in the defect columns
     # if it does then we can skip processing this section_df
 
+<<<<<<< HEAD
     defect_df = select(conv_section_df, 3:number_of_section_df_cols)  # Adjust column indices as needed
+=======
+    # Select defect columns dynamically: from column 3 up to (but not including) Direction
+    # (SectionID is at column 1 after build_main_df reorders it, so using Direction as the boundary)
+    direction_col = findfirst(==("Direction"), names(conv_section_df))
+    defect_df = select(conv_section_df, 3:direction_col-1)
+>>>>>>> 345710b15e6a438f83281208a778ea779e08abd0
 
     # Iterate through columns and convert floats
     for name in names(defect_df)
@@ -70,21 +77,33 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
 
     # read the defect code list
 
-    defect_code_list = CSV.read("CVI_Defect_code_info.csv", 
-                                DataFrame; delim=',', 
-                                header=true, 
+    defect_code_list = CSV.read("CVI_Defect_code_info.csv",
+                                DataFrame; delim=',',
+                                header=true,
                                 normalizenames=true)
+
+    # Build a direction -> no-defect code map from rows with cvi_code == 0
+    xsp_dict = Dict("F" => "CL1", "R" => "CR1", "B" => "Both", "N/A" => "N")
+    no_defect_codes = Dict{String, String}()
+    for row in eachrow(defect_code_list)
+        if string(row[1]) == "0"
+            dir_key = get(xsp_dict, string(strip(row[3])), string(strip(row[3])))
+            no_defect_codes[dir_key] = string(strip(row[2]))
+        end
+    end
 
     for row in eachrow(defect_code_list)
 
+        # skip the no-defect sentinel rows (cvi_code == 0)
+        if string(row[1]) == "0"
+            continue
+        end
+
         cvi_code = string(row[1])
         defect_code = row[2]
-        survey_direction = row[3]
+        survey_direction = string(strip(row[3]))
         calculation = row[4]
-        lower_limit = row[5]  
-
-        # convert the survey direction cross section code which is reported in the observ_defect_record
-        xsp_dict = Dict("F" => "CL1", "R" => "CR1", "B" => "Both", "N/A" => "N")
+        #lower_limit = row[5]
 
         # convert the grouped DF to a standard DF
         #conv_section_df = DataFrame(section_df)
@@ -97,7 +116,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
         defect_value = ""
         obval_code = ""
         obval_records = []
-        defect_present = false
+        #defect_present = false
 
         #println("typeof returned_clusters :", typeof(returned_clusters))
         #println("returned_clusters :", returned_clusters)
@@ -234,11 +253,11 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
     #println("unique_direction_list ", unique_direction_list)
 
     for direction in ["CL1", "CR1"]
-            
+
         if (direction ∉ unique_direction_list) && (section_start_chainage != section_end_chainage)
-                #
+            no_defect_code = get(no_defect_codes, direction, "BUTS")
             observation_number += 1
-            observ_defect_record = string("OBSERV\\", observation_number, ",BUTS,235,", direction, ",", section_start_chainage, ",", section_end_chainage, ";\n")
+            observ_defect_record = string("OBSERV\\", observation_number, ",", no_defect_code, ",235,", direction, ",", section_start_chainage, ",", section_end_chainage, ";\n")
             obval_defect_record = string("OBVAL\\1,3,100,P;\n")
             push!(hmd_return_records, observ_defect_record)
             push!(hmd_return_records, obval_defect_record)
