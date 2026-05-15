@@ -10,8 +10,6 @@ function read_data_grid(filepath::String)
                         normalizenames=true
  #                       missingstring=""
                         )
-<<<<<<< HEAD
-
     # The .grd file contains two data blocks. The second block (GPS/measurement data)
     # has more columns than the first block (CVI observations), causing CSV to create
     # auto-named extra columns (Column7, Column8, ...). First-block rows have missing
@@ -39,7 +37,7 @@ function read_data_grid(filepath::String)
 
     #input_df= select(input_df, cols_to_keep)
     DataFrames.dropmissing!(input_df)
-=======
+
     # Trim at CHARTCrack marker: drop from one line above it to the end
     first_col = names(input_df)[1]
     chartcrack_idx = findfirst(
@@ -59,7 +57,6 @@ function read_data_grid(filepath::String)
 
     # drop the rows with a missing item this is everything after and including the empty line
     dropmissing!(input_df)
->>>>>>> 345710b15e6a438f83281208a778ea779e08abd0
    
     return input_df
 end

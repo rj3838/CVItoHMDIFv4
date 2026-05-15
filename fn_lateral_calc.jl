@@ -1,4 +1,4 @@
-function fn_lateral_calc(section_df,returned_clusters, returned_rows, section_length) 
+function fn_lateral_calc(section_df,returned_clusters, section_length, survey_length_of_row)
     
     function string_vector_to_int_vector(str_vec::Vector{String})::Vector{Int64}
     # this converts a vector of strings to a vector of integers (deals with column headers)
@@ -23,7 +23,7 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows, section_le
 
     # returned clusters is the position of the error code on the grid.
     # returned cluster should be sorted to give the positions in order
-    
+
     #println("type of returned clusters ",typeof(returned_clusters))
     # sort!(returned_clusters)
     # println("vector of returned_clusters ",returned_clusters)
@@ -35,6 +35,11 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows, section_le
     # println("last_inner_vector ", last_inner_vector)
     # last_column = (last_inner_vector)[2]
     # println("last_column ", last_column)
+    # calculate the length of a row in the section_df
+    # at this stage the row chainage is still there it is t so
+
+    #length_of_subsection_rows = diff(section_df[!,t])[1]
+    number_of_subsection_rows = nrow(section_df)
 
     # remane the columns to get rid of any underscores
     #println("column names before renaming : ", names(section_df))
@@ -46,7 +51,7 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows, section_le
     #println("first 5 rows : ")
     #print(first(section_df, 5))
     #section_length = section_df[1, "Length"]
-    println("section length ", section_length)
+    println("section length in lateral calc", section_length)
 
     # Get all column names
     all_names = names(section_df)
@@ -76,16 +81,13 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows, section_le
     println("width of cols ", width_of_cols)
     println("number of cols ", number_of_cols)
 
-    if 
-
-
     # Extract all 'a' values (the first component)
     # The expression `getindex.(cartesian_vector, 1)` uses broadcasting (`.`)
     # to apply `getindex(::CartesianIndex, 1)` to every element.
     row_values = getindex.(returned_clusters, 1)
 
     #Extract all 'b' values (the second component)
-    col_values = getindex.(returned_clusters, 2)
+    #col_values = getindex.(returned_clusters, 2)
 
 
     # 3. Find the min/max for each component
@@ -95,14 +97,14 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows, section_le
     println("min row ", min_rows)
     println("max row ", max_rows)
 
-    min_cols = minimum(col_values)
-    max_cols = maximum(col_values)
+    #min_cols = minimum(col_values)
+    #max_cols = maximum(col_values)
 
     # calcualte size of rows and cols for the defect
 
     #size_rows = width_of_cols # calc is above
 
-    println("column names : ", names(section_df))
+    println("column names in lateral calc: ", names(section_df))
 
     rows_in_section = nrow(section_df)
     #length_of_section = section_df.Length[1] # length is the first column in the section_df and is the same for all rows in the section_df
@@ -110,16 +112,16 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows, section_le
     println("rows in section ", rows_in_section)
     println("length of section ", section_length)
 
-    size_rows = section_length / rows_in_section # so we can calculate the longitudinal length of each row (distance surveyed) 
+    #size_rows = section_length / rows_in_section # so we can calculate the longitudinal length of each row (distance surveyed)
     #size_rows = ((max_rows - min_rows) + 0.2) / 5 # 5 rows per metre (+ 0.2 as there is no row at 0m)
     ## the col numbers are at the end of the width so 400 -200 is 200 cm and never includes the lowest of the two values.
     # in this example column 200 actually starts at 0 (but there is no column 0 to calculate with)
     #size_cols = ((max_cols - min_cols) * 200) + 200 
-    size_cols = width_of_cols # calc is above !
+    #size_cols = width_of_cols # calc is above !
     # calculate the lateral extent (see ukpms user man, vol 2, ch 7, pg 8)
     # width of the carriageway is the last heading of the section dataframe 
     #println("sect_df names : ", names(section_df))
-    max_lateral_extent = parse(Int64, names(section_df)[end])
+    #max_lateral_extent = parse(Int64, names(section_df)[end])
 
     #println("max lateral_extent ", max_lateral_extent)
     #println(typeof(max_lateral_extent))
@@ -133,7 +135,7 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows, section_le
         return [i * n / 8.0 for i in 1:8]
     end
 
-# Example: Dividing the integer lateral_extent into eighths
+    # Example: Dividing the integer lateral_extent into eighths
     #lateral_extent_range = divide_into_eighths_comp(max_lateral_extent)
     #println(lateral_extent_range)
 
@@ -141,15 +143,35 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows, section_le
     # so for a 4m width the lateral_extent_range is 
     # [500.0, 1000.0, 1500.0, 2000.0, 2500.0, 3000.0, 3500.0, 4000.0] it's the eighths.
     # need to find the lateral extent in terms of the proportion where the size cols fits.
+    println("returned_clusters", returned_clusters)
+
+    # getting the locations of the defects from the returned cluster
+
+    row_locations = getindex.(returned_clusters,1)
+    column_locations = getindex.(returned_clusters, 2)
+
+    println("row_locations : ",row_locations)
+    println("column_locations : ", column_locations)
+
+    #find the highest and lowest locations
+    highest_row = maximum(row_locations)
+    lowest_row = minimum(row_locations)
+    #highest_column = maximum(row_locations)
+    #lowest_column = minimum(column_locations)
+
+    returned_rows = highest_row - lowest_row + 1
+    #returned_columns = highest_column - lowest_column + 1
+
 
     # get the values we are interested in from the lateral_extent_range
-    indices_to_keep = [1, 2, 4, 6, 8]
 
-    lateral_extent_values_of_interest = lateral_extent_range[indices_to_keep]
+    #indices_to_keep = [1, 2, 4, 6, 8]
+
+    #lateral_extent_values_of_interest = lateral_extent_range[indices_to_keep]
 
     #println("lateral extent brackets : ", lateral_extent_values_of_interest)
 
-    extent_position = findfirst(x -> size_cols <= x, lateral_extent_values_of_interest)
+    #extent_position = findfirst(x -> size_cols <= x, lateral_extent_values_of_interest)
 
     #println("extent_position : ", extent_position)
 
@@ -166,7 +188,7 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows, section_le
         end
     end
 
-    extent_value = assign_value_vector(extent_position)
+    #extent_value = assign_value_vector(extent_position)
 
     #println("extent_value : ", extent_value)
 
@@ -179,17 +201,23 @@ function fn_lateral_calc(section_df,returned_clusters, returned_rows, section_le
 
     #subsection_length = (nrow(section_df) / 5) - 0.2 # because each row is 0.2m and nrow returns one too many
 
-    println("subsection_length ", subsection_length)
+    #rintln("subsection_length ", subsection_length)
 
-    defect_area = (size_rows) * extent_value
+    #defect_area = (size_rows) * extent_value
+    #defect_area = returned_rows * returned_columns
+    defect_area_cells = length(returned_clusters)
     defect_percentage = 0.0
 
     #println("defect_area ", defect_area)
 
-    defect_percentage = (defect_area / subsection_length) * 100
+    subsection_width = width_of_cols * number_of_cols
+    subsection_length = survey_length_of_row * number_of_subsection_rows
+    subsection_area_cells = subsection_length * subsection_width
+
+    defect_percentage = (defect_area_cells / subsection_area_cells) * 100
 
     if typeof(defect_percentage) == "String"
-        defect_percentage = parse(Float64, direct_percentage)
+        defect_percentage = parse(Float64, defect_percentage)
     end
 
     return_defect_percentage = round(defect_percentage, digits=2)

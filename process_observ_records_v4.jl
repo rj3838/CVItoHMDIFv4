@@ -15,7 +15,7 @@ end
 function process_observ_records(section_df::DataFrame, observation_number::Int16)
     #println("starting process obsvervation records for section: ", section_df.SectionID[1])
     # this is used to return the records
-    hmd_return_records = []
+    hmd_return_records = String[]
     observ_defect_record = ""
     obval_defect_record = ""
     #obval_indicator = false
@@ -38,10 +38,22 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
 
     # this list is used to track which directions have been processed in the section_df so we can create BUTS records if needed
     # for directions with defects 
-    direction_processed_list = []
+    direction_processed_list = String[]
 
     # convert the section_df from a grouped DF to a standard DF before i do anything to it.
     conv_section_df = DataFrame(section_df)
+
+    #find the distance between to survey rows
+
+    chainage_diffs = diff(conv_section_df.Chainage)
+    # check there is a difference between the rows and return if there isn't
+    if isempty(chainage_diffs)
+        # single-row section — nothing to process
+        return String[], observation_number
+    end
+    survey_length_of_row = chainage_diffs[1]
+
+    # find the survey length of each row
 
     number_of_section_df_cols = size(conv_section_df, 2)
     println("number of columns in section_df ", number_of_section_df_cols)
@@ -49,14 +61,12 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
     # check to see if the section_df contains only zeros in the defect columns
     # if it does then we can skip processing this section_df
 
-<<<<<<< HEAD
+
     defect_df = select(conv_section_df, 3:number_of_section_df_cols)  # Adjust column indices as needed
-=======
     # Select defect columns dynamically: from column 3 up to (but not including) Direction
     # (SectionID is at column 1 after build_main_df reorders it, so using Direction as the boundary)
     direction_col = findfirst(==("Direction"), names(conv_section_df))
     defect_df = select(conv_section_df, 3:direction_col-1)
->>>>>>> 345710b15e6a438f83281208a778ea779e08abd0
 
     # Iterate through columns and convert floats
     for name in names(defect_df)
@@ -115,7 +125,7 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
         
         defect_value = ""
         obval_code = ""
-        obval_records = []
+        obval_records = String[]
         #defect_present = false
 
         #println("typeof returned_clusters :", typeof(returned_clusters))
@@ -144,7 +154,10 @@ function process_observ_records(section_df::DataFrame, observation_number::Int16
 
                 if calculation == "Lateral"
                     section_length = section_df[1, "Length"] # length is the first column in the section_df and is the same for all rows in the section_df
-                    defect_value = fn_lateral_calc(defect_df, cluster, returned_rows, section_length)
+                    defect_value = fn_lateral_calc(defect_df,
+                        cluster,
+                        section_length,
+                        survey_length_of_row)
                     obval_code = "P"
                     #println(calculation, "Lateral  ", defect_value)
                 end
