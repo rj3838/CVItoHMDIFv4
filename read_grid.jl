@@ -36,9 +36,9 @@ function read_data_grid(filepath::String)
     #cols_to_keep = [col for col in names(input_df) if !occursin("Column", col)]
 
     #input_df= select(input_df, cols_to_keep)
-    DataFrames.dropmissing!(input_df)
-
-    # Trim at CHARTCrack marker: drop from one line above it to the end
+    # Trim at CHARTCrack marker BEFORE dropmissing, so the marker row isn't removed
+    # before we can find it. The empty line between the last data row and CHARTCrack
+    # accounts for the -2 offset (keeps all good data rows).
     first_col = names(input_df)[1]
     chartcrack_idx = findfirst(
         row -> !ismissing(row[first_col]) && occursin("CHARTCrack", string(row[first_col])),
@@ -48,6 +48,8 @@ function read_data_grid(filepath::String)
         keep_until = max(0, chartcrack_idx - 2)
         input_df = input_df[1:keep_until, :]
     end
+
+    DataFrames.dropmissing!(input_df)
 
     # Drop trailing columns that are entirely missing (e.g. extra fields from trailing commas)
     # Work from the end backwards and stop at the first column with any non-missing value
