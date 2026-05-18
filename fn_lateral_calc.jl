@@ -142,83 +142,18 @@ function fn_lateral_calc(section_df,returned_clusters, section_length, survey_le
     # find out which of the 'brackets' in the lateral_extent_range the defect size (size_cols) fits
     # so for a 4m width the lateral_extent_range is 
     # [500.0, 1000.0, 1500.0, 2000.0, 2500.0, 3000.0, 3500.0, 4000.0] it's the eighths.
-    # need to find the lateral extent in terms of the proportion where the size cols fits.
-    println("returned_clusters", returned_clusters)
 
-    # getting the locations of the defects from the returned cluster
-
-    row_locations = getindex.(returned_clusters,1)
-    column_locations = getindex.(returned_clusters, 2)
-
-    println("row_locations : ",row_locations)
-    println("column_locations : ", column_locations)
-
-    #find the highest and lowest locations
-    highest_row = maximum(row_locations)
-    lowest_row = minimum(row_locations)
-    #highest_column = maximum(row_locations)
-    #lowest_column = minimum(column_locations)
-
-    returned_rows = highest_row - lowest_row + 1
-    #returned_columns = highest_column - lowest_column + 1
-
-
-    # get the values we are interested in from the lateral_extent_range
-
-    #indices_to_keep = [1, 2, 4, 6, 8]
-
-    #lateral_extent_values_of_interest = lateral_extent_range[indices_to_keep]
-
-    #println("lateral extent brackets : ", lateral_extent_values_of_interest)
-
-    #extent_position = findfirst(x -> size_cols <= x, lateral_extent_values_of_interest)
-
-    #println("extent_position : ", extent_position)
-
-    function assign_value_vector(n::Int)
-        
-        # these are the multipliers for the transverse/lateral extent
-        VALUE_VECTOR = [0.125, 0.25, 0.5, 0.75, 1] 
-
-        # Check bounds before indexing to avoid an error
-        if 1 <= n <= length(VALUE_VECTOR)
-            return VALUE_VECTOR[n]
-        else
-            return 2
-        end
-    end
-
-    #extent_value = assign_value_vector(extent_position)
-
-    #println("extent_value : ", extent_value)
-
-    # length of defect = size_rows (five rows per metre and calc is above here)
-    # extent of defect = extent_value
-    # subection length = length of the section_df / 5 (five rows per metre)
-    # subsection_area = subsection_length * 1 (1 is the full extent/width)
-
-    # Defect area
-
-    #subsection_length = (nrow(section_df) / 5) - 0.2 # because each row is 0.2m and nrow returns one too many
-
-    #rintln("subsection_length ", subsection_length)
-
-    #defect_area = (size_rows) * extent_value
-    #defect_area = returned_rows * returned_columns
     defect_area_cells = length(returned_clusters)
-    defect_percentage = 0.0
+    subsection_area_cells = rows_in_section * number_of_cols
 
-    #println("defect_area ", defect_area)
-
-    subsection_width = width_of_cols * number_of_cols
-    subsection_length = survey_length_of_row * number_of_subsection_rows
-    subsection_area_cells = subsection_length * subsection_width
+    println("defect area cells: ", defect_area_cells)
+    println("subsection area cells: ", subsection_area_cells)
 
     defect_percentage = (defect_area_cells / subsection_area_cells) * 100
 
-    if typeof(defect_percentage) == "String"
-        defect_percentage = parse(Float64, defect_percentage)
-    end
+    defect_percentage = Float64(defect_percentage)
+
+    println("defect % :", defect_percentage)
 
     return_defect_percentage = round(defect_percentage, digits=2)
 
