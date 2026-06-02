@@ -9,6 +9,8 @@ using DataFrames
 using DataFramesMeta
 using Gtk
 
+include("build_main_df.jl")
+include("fn_grid_processing.jl")
 include("process_observ_records_v4.jl")
 
 include("ClusterIdentification2.jl")
@@ -21,7 +23,7 @@ include("find_rows_with_value.jl")
 include("create_survey_name.jl")
 include("open_route_file.jl")
 include("open_section_file.jl")
-include("build_main_df.jl")
+#include("build_main_df.jl")
 include("build_hmdif_header_block.jl")
 include("process_combined_data.jl")
 include("process_section_records.jl")
@@ -33,7 +35,7 @@ include("fn_lateral_calc.jl")
 include("process_buts_record.jl")
 include("create_survey_record.jl")
 include("fn_get_multiple_data_grd_filenames.jl")
-include("fn_grid_processing.jl")
+#include("fn_grid_processing.jl")
 include("categorise_value_ternary.jl")
 
 #start of main
